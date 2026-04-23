@@ -11,7 +11,7 @@ metadata:
 
 apps:
   se050_minimal_example:
-    description: "Scaffold — logs version string; SE050 I2C bring-up TBD"
+    description: "Phase 1 — CRTP I2C transport + Device; default SDA=47 SCL=48 @100kHz addr 0x48"
     source_file: "se050_minimal_example.cpp"
     category: "example"
     idf_versions: ["release/v5.5"]

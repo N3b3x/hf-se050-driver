@@ -18,7 +18,8 @@ This site tracks the [`docs/`](https://github.com/N3b3x/hf-se050-driver/tree/mai
 2. **[Quick start](quickstart.md)** — Planned bring-up flow  
 3. **[Hardware setup](hardware_setup.md)** — I²C and board notes (TBD)  
 4. **[CMake integration](cmake_integration.md)** — `hf::se050` and ESP-IDF component  
-5. **[API reference](api_reference.md)** — Placeholder types and headers  
+4b. **[Platform integration](platform_integration.md)** — CRTP I2C transport  
+5. **[API reference](api_reference.md)** — Transport, session, device templates  
 6. **[Examples](examples.md)** — ESP32-S3 minimal example  
 7. **[Troubleshooting](troubleshooting.md)** — Common issues while developing  
 8. **[Datasheet & links](datasheet/README.md)** — Official NXP pointers; local PDFs stay out of git  

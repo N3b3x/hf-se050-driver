@@ -23,11 +23,14 @@ set(INC_BASE_PATH "../../../inc")
 
 set(MAIN_INCLUDE_DIRS
     "."
+    "include"
     "${INC_BASE_PATH}"
 )
 
 set(MAIN_REQUIRES
     driver
+    esp_driver_i2c
+    esp_driver_gpio
     freertos
     log
     hf_se050

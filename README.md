@@ -4,7 +4,8 @@ Scaffold for an **NXP SE050 / SE050A EdgeLock™ secure element** driver (I²C),
 
 ## Status
 
-- **Public API and protocol stack:** not implemented yet (placeholder headers + minimal ESP32-S3 example that compiles).
+- **Phase 1 (done):** `se050::I2cTransceiveInterface` (CRTP), `Session`, `Device`, ESP-IDF example transport (`HfSe050EspIdfI2c`), minimal `se050_minimal_example` build.
+- **Next:** T=1 over I2C, APDU, SCP03, applet APIs — see `docs/platform_integration.md`.
 - **Local reference material:** put datasheets, old code, and NDA-restricted exports under `_local_reference/` (see that folder’s README). That tree is **gitignored** and will not sync to GitHub.
 
 ## Layout

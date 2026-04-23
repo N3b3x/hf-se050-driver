@@ -20,6 +20,17 @@ From **`examples/esp32/`**:
 
 Set `ESPPORT` if needed (for example `export ESPPORT=/dev/ttyACM0`).
 
+## Default wiring (`HfSe050EspIdfI2c`)
+
+| Signal | GPIO (ESP32-S3 default) |
+|--------|-------------------------|
+| SDA    | 47                      |
+| SCL    | 48                      |
+| SE050 7-bit addr | `0x48` (override in `Se050EspI2cConfig`) |
+| SE_RESET | not used (`GPIO_NUM_NC`) |
+
+Override by constructing `hf_se050_examples::Se050EspI2cConfig` before `HfSe050EspIdfI2c`.
+
 ## Status
 
-**Scaffold only** — the example prints a log line and exits `app_main`. SE050 I²C and APDU integration will be added after reference material is merged into tracked sources.
+**Phase 1** — CRTP transport, `se050::Device`, and a trivial `TransceiveRaw` probe. **T=1 / APDU** come next; see repo `README.md` and `docs/platform_integration.md`.

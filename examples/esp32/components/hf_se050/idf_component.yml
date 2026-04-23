@@ -1,6 +1,6 @@
 ---
 name: hf-se050-driver
-version: "0.1.0"
+version: "0.2.0"
 description: "NXP SE050 / SE050A secure element — driver scaffold"
 
 maintainers:

@@ -51,6 +51,7 @@ examples/esp32/**/build*/
 
 # ESP-IDF specific
 **/sdkconfig.old
+examples/esp32/sdkconfig
 **/partition_table.csv
 **/*.elf
 **/*.bin
@@ -77,6 +78,9 @@ Makefile
 **/docs/doxygen/
 docs/doxygen/
 docs/html/
+
+# NXP / third-party PDFs — keep local only under _local_reference/, not docs/
+docs/datasheet/*.pdf
 
 # VSCode user-specific files
 .vscode/settings.json.user
