@@ -1,0 +1,44 @@
+---
+name: 🔍 C++ Analysis CI
+
+on:
+  push:
+    branches: [main, 'release/*']
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cpp-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-cppcheck:
+    name: Test C++ Static Analysis (Cppcheck)
+    uses: N3b3x/hf-general-ci-tools/.github/workflows/ru-cpp-analysis.yml@main
+    with:
+      # =============================================================================
+      # Analysis Paths
+      # =============================================================================
+      paths: "inc src"
+
+      # =============================================================================
+      # C++ Standard
+      # =============================================================================
+      std: "c++17"
+
+      # =============================================================================
+      # Analysis Checks
+      # =============================================================================
+      # Enable comprehensive checks for embedded C++ driver
+      enable: "warning,style,performance,portability,information"
+      force: true
+
+      # =============================================================================
+      # Quality Control
+      # =============================================================================
+      strict: false

@@ -1,0 +1,26 @@
+---
+name: hf-se050-driver
+version: "0.1.0"
+description: "NXP SE050 / SE050A secure element — driver scaffold"
+
+maintainers:
+  - "HardFOC"
+license: "GPL-3.0"
+
+url: https://github.com/N3b3x/hf-se050-driver
+repository: https://github.com/N3b3x/hf-se050-driver
+issues: https://github.com/N3b3x/hf-se050-driver/issues
+
+targets:
+  - esp32s3
+  - esp32c6
+  - esp32
+
+dependencies:
+  idf: ">=5.0.0"
+
+tags:
+  - "se050"
+  - "secure-element"
+  - "i2c"
+  - "nxp"

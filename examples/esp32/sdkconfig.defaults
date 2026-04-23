@@ -1,0 +1,2 @@
+# ESP32-S3 — HF-SE050 example defaults (merge with idf.py set-target)
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=4096

@@ -1,0 +1,73 @@
+# Lychee Link Checker Configuration - Template for HF Drivers
+# =============================================================================
+# This configuration handles common issues with link checking for HF drivers,
+# particularly GNU license URLs that are frequently rate-limited.
+# Based on official example: https://github.com/lycheeverse/lychee/blob/master/lychee.example.toml
+# =============================================================================
+
+# Website timeout from connect to response finished (in seconds)
+timeout = 30
+
+# Maximum number of allowed retries before a link is declared dead
+max_retries = 3
+
+# Maximum number of allowed redirects
+max_redirects = 10
+
+# Minimum wait time in seconds between retries of failed requests
+retry_wait_time = 1
+
+# User agent to send with each request
+user_agent = "lychee/0.21.0"
+
+# Request method
+method = "get"
+
+# Proceed for server connections considered insecure (invalid TLS)
+insecure = false
+
+# Exclude all private IPs from checking
+# Equivalent to setting exclude_private, exclude_link_local, and exclude_loopback to true
+exclude_all_private = true
+
+# Check mail addresses (disabled to avoid mailto links)
+include_mail = false
+
+# Check links inside code and pre blocks as well as Markdown code blocks
+include_verbatim = false
+
+# Skip missing input files (default is to error if they don't exist)
+skip_missing = false
+
+# Do not scan vendored Doxygen theme or the esp32/scripts submodule (Jekyll-style /docs/ links)
+exclude_path = [
+  "(/|^)_config/doxygen-extensions/",
+  "(/|^)examples/esp32/scripts/",
+]
+
+# Comma-separated list of accepted status codes for valid links
+# 200: OK
+# 429: Too Many Requests (rate limited but valid)
+# 403: Forbidden (some sites block automated requests but are valid)
+accept = ["200", "429", "403"]
+
+# Exclude URLs and mail addresses from checking (treated as regular expressions)
+exclude = [
+  # GNU License URLs - frequently rate limited (exact matches)
+  '^https://www\.gnu\.org/licenses/gpl-3\.0/?$',
+  '^https://gnu\.org/licenses/gpl-3\.0/?$',
+  '^https://www\.gnu\.org/licenses/gpl-3\.0\.html$',
+  
+  # License badge URLs that might be rate limited (exact matches)
+  '^https://img\.shields\.io/badge/License-GPLv3-blue\.svg$',
+  
+  # General patterns for GNU license URLs (broader matching)
+  '^https?://(www\.)?gnu\.org/licenses/.*',
+  '^https?://img\.shields\.io/badge/License-.*',
+
+  # Manufacturer product sites - may timeout or block automated requests
+  '^https://product\.tdk\.com/',
+
+  # GitHub Pages for this repo — may 404 until the site is first published; README still links for humans
+  '^https://n3b3x\.github\.io/hf-se050-driver/?.*',
+]

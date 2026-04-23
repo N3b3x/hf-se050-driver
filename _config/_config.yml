@@ -1,0 +1,254 @@
+# =============================================================================
+# Standardized Jekyll Configuration for HardFOC Driver Documentation
+# =============================================================================
+# This is a template configuration file. Replace placeholders marked with
+# {{PLACEHOLDER}} with driver-specific values.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Site Identity
+# -----------------------------------------------------------------------------
+title: "HardFOC SE050 Driver"
+description: >
+  NXP SE050 / SE050A secure element driver (scaffold). ESP32-S3 examples use I2C;
+  implementation TBD.
+
+baseurl: "/hf-se050-driver"
+url: "https://n3b3x.github.io"
+
+# -----------------------------------------------------------------------------
+# Author Information
+# -----------------------------------------------------------------------------
+author:
+  name: "N3b3x"
+  email: "n3b3x@example.com"
+  url: "https://github.com/n3b3x"
+
+# -----------------------------------------------------------------------------
+# Directory Configuration
+# -----------------------------------------------------------------------------
+# Point Jekyll to use our custom layouts and includes in _config folder
+layouts_dir: _config/_layouts
+includes_dir: _config/_includes
+
+# -----------------------------------------------------------------------------
+# Theme and Plugins
+# -----------------------------------------------------------------------------
+# Using Just the Docs theme - clean, modern, documentation-focused
+remote_theme: just-the-docs/just-the-docs
+
+# Essential Jekyll plugins for documentation sites
+plugins:
+  - jekyll-feed              # RSS feed generation
+  - jekyll-sitemap           # XML sitemap for search engines
+  - jekyll-seo-tag           # SEO meta tags
+  - jekyll-remote-theme      # Required for remote_theme
+  - jekyll-redirect-from     # Page redirects
+  - jekyll-optional-front-matter  # Allow pages without front matter
+
+# -----------------------------------------------------------------------------
+# Navigation Settings
+# -----------------------------------------------------------------------------
+nav_next_prev: true  # Show previous/next page links
+
+# -----------------------------------------------------------------------------
+# Markdown Processing
+# -----------------------------------------------------------------------------
+markdown: kramdown
+highlighter: rouge  # Syntax highlighting engine
+
+kramdown:
+  input: GFM  # GitHub Flavored Markdown
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+    span:
+      line_numbers: false  # No line numbers for inline code
+    block:
+      line_numbers: true   # Line numbers for code blocks
+      start_line: 1
+
+# -----------------------------------------------------------------------------
+# Site Settings
+# -----------------------------------------------------------------------------
+timezone: UTC
+encoding: utf-8
+lang: en
+
+# -----------------------------------------------------------------------------
+# Just the Docs Theme Configuration
+# -----------------------------------------------------------------------------
+# Search functionality
+search_enabled: true
+search:
+  heading_level: 3          # Search up to h3 headings
+  previews: 5               # Number of search result previews
+  preview_words_before: 10  # Words before match in preview
+  preview_words_after: 15   # Words after match in preview
+  tokenizer_separator: /[\s/]+/  # Token separator regex
+  rel_url: true             # Use relative URLs
+  button: true              # Show search button
+
+# Navigation and UI enhancements
+nav_enabled: true
+heading_anchors: true       # Auto-generate anchor links for headings
+breadcrumbs: true           # Show breadcrumb navigation
+toc:                        # Table of contents
+  min_level: 2              # Start from h2
+  max_level: 4              # Include up to h4
+
+# Callouts for better content presentation
+# These create styled note/warning/tip/important boxes
+callouts:
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: yellow
+  tip:
+    title: Tip
+    color: green
+  important:
+    title: Important
+    color: red
+
+# Visual enhancements
+color_scheme: dark          # Default to dark theme
+toggle_color_scheme: true   # Allow theme switching
+toggle_auto_mode: true      # Auto-detect system theme preference
+
+# -----------------------------------------------------------------------------
+# Auxiliary Links (Top Navigation)
+# -----------------------------------------------------------------------------
+aux_links:
+  "📚 GitHub Repository":
+    - "https://github.com/n3b3x/hf-se050-driver"
+  "🐛 Report Issues":
+    - "https://github.com/n3b3x/hf-se050-driver/issues"
+  "⭐ Star on GitHub":
+    - "https://github.com/n3b3x/hf-se050-driver/stargazers"
+
+# -----------------------------------------------------------------------------
+# Footer Customization
+# -----------------------------------------------------------------------------
+footer_content: >
+  Built with ❤️ using <a href='https://just-the-docs.github.io/just-the-docs/'>Just the Docs</a> •
+  <a href='https://github.com/n3b3x/hf-se050-driver/blob/main/LICENSE'>GPL v3 License</a> •
+  <a href='https://github.com/n3b3x/hf-se050-driver'>View on GitHub</a>
+
+# -----------------------------------------------------------------------------
+# Collections (Optional - for organized documentation)
+# -----------------------------------------------------------------------------
+# Uncomment if you want to organize docs into collections
+# collections:
+#   docs:
+#     permalink: "/:collection/:path/"
+#     output: true
+#     sort_by: nav_order
+
+# -----------------------------------------------------------------------------
+# Just the Docs Advanced Configuration
+# -----------------------------------------------------------------------------
+just_the_docs:
+  # Navigation configuration
+  nav_fold: true  # Allow folding navigation items
+
+  # External links in navigation
+  nav_external_links:
+    - title: "📚 GitHub Repository"
+      url: "https://github.com/n3b3x/hf-se050-driver"
+    - title: "🐛 Issues"
+      url: "https://github.com/n3b3x/hf-se050-driver/issues"
+
+  # Custom head content (loads custom CSS/JS)
+  head_custom: _includes/head_custom.html
+
+  # Custom CSS and JS files
+  custom_css:
+    - assets/css/custom.css
+  custom_js:
+    - assets/js/custom.js
+
+# -----------------------------------------------------------------------------
+# File Exclusions
+# -----------------------------------------------------------------------------
+# Files and directories to exclude from Jekyll processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .github
+  - "*.gem"
+  - "*.gemspec"
+  - .sass-cache
+  - .jekyll-cache
+  - .jekyll-metadata
+  - examples/esp32/scripts/  # ESP32 project tools (not part of docs)
+  - _config/doxygen-extensions/  # Doxygen extensions (separate from Jekyll)
+  - src/                      # Source code
+  - inc/                      # Alternative header directory
+  - tests/                    # Test files
+
+# -----------------------------------------------------------------------------
+# File Inclusions
+# -----------------------------------------------------------------------------
+# Files that are normally excluded but should be included
+include:
+  - _pages                    # Custom pages
+  - ../README.md              # Root README
+  - ../LICENSE                # License file
+  - assets/                   # Static assets
+  - _config/404.html                  # 404 error page
+
+# -----------------------------------------------------------------------------
+# SEO Configuration
+# -----------------------------------------------------------------------------
+# Enhanced SEO settings for better search engine visibility
+seo:
+  type: "SoftwareApplication"
+  name: "HardFOC SE050 Driver"
+  description: >
+    NXP SE050 / SE050A secure element driver (scaffold). ESP32-S3 examples; implementation TBD.
+  url: "https://n3b3x.github.io/hf-se050-driver"
+  twitter:
+    card: "summary_large_image"
+    site: "@n3b3x"
+  og:
+    type: "website"
+    locale: "en_US"
+
+# -----------------------------------------------------------------------------
+# Social Media Links
+# -----------------------------------------------------------------------------
+social:
+  name: "HardFOC SE050 Driver"
+  links:
+    - "https://github.com/n3b3x/hf-se050-driver"
+    - "https://github.com/n3b3x"
+
+# -----------------------------------------------------------------------------
+# HTML Compression (Performance Optimization)
+# -----------------------------------------------------------------------------
+# Compress HTML output for faster page loads
+compress_html:
+  clippings: all      # Remove whitespace
+  comments: all       # Remove HTML comments
+  endings: all       # Remove trailing whitespace
+  startings: [html, head, body]  # Clean start tags
+
+# -----------------------------------------------------------------------------
+# Driver-Specific Settings (Optional)
+# -----------------------------------------------------------------------------
+# Add driver-specific metadata here if needed
+# Example:
+# driver:
+#   version: "1.0.0-dev"
+#   branch: "main"
+#   version_type: "development"
+#   features:
+#     - "Feature 1"
+#     - "Feature 2"
+

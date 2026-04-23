@@ -1,0 +1,43 @@
+---
+name: 📝 Markdown Lint CI
+
+on:
+  push:
+    branches: [main, 'release/*']
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-markdown-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markdownlint:
+    name: Markdown Lint
+    uses: N3b3x/hf-general-ci-tools/.github/workflows/ru-markdown-lint.yml@main
+    with:
+      # =============================================================================
+      # File Selection
+      # =============================================================================
+      globs: 'docs/** *.md **/*.md'
+      exclude_patterns: '.git/**,node_modules/**,venv/**,.venv/**,_site/**,**/hf-espidf-project-tools/**'
+
+      # =============================================================================
+      # Configuration
+      # =============================================================================
+      config_file: '_config/.markdownlint.json'
+
+      # =============================================================================
+      # Execution Options
+      # =============================================================================
+      # use_docker: false = Use official action (faster, recommended)
+      # use_docker: true  = Use Docker container (more control, supports exclude_patterns)
+      use_docker: false
+      fix: false  # Automatically fix fixable issues (does not commit changes)
+      separator: ''  # Separator between glob patterns (default: space)
+

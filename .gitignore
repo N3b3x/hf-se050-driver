@@ -37,5 +37,104 @@
 *.out
 *.app
 
-# debug information files
+# Debug information files
 *.dwo
+
+# Build directories (ESP-IDF and general)
+**/build/
+**/build_*/
+**/build*/
+/build/
+build/
+examples/esp32/build*/
+examples/esp32/**/build*/
+
+# ESP-IDF specific
+**/sdkconfig.old
+**/partition_table.csv
+**/*.elf
+**/*.bin
+**/*.map
+**/*.hex
+**/*.img
+**/*.ota
+
+# CMake and Make build folders
+CMakeFiles/
+**/CMakeFiles/
+CMakeCache.txt
+**/CMakeCache.txt
+cmake_install.cmake
+**/cmake_install.cmake
+Makefile
+**/Makefile
+
+# Dependencies
+**/dependencies.lock
+
+# Documentation output
+**/docs/html/
+**/docs/doxygen/
+docs/doxygen/
+docs/html/
+
+# VSCode user-specific files
+.vscode/settings.json.user
+.vscode/*.backup
+
+# IDE settings
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+.venv/
+**/venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.python_env/
+
+# Cache
+**/.cache/
+.cache/
+
+# Compile commands
+**/compile_commands.json
+compile_commands.json
+
+# Log files
+**/logs/
+**/*.log
+logs/
+
+# CI/CD
+ci_build_path/
+actionlint*
+**/actionlint*
+
+# Node modules
+**/node_modules/
+node_modules/
+package-lock.json
+package*.json
+
+# OS files
+.DS_Store
+**/.DS_Store
+*.DS_Store
+Thumbs.db
+**/Thumbs.db
+
+# Backup files
+**/*.bak*
+*.bak
+
+# -----------------------------------------------------------------------------
+# Local-only reference material (datasheets, legacy code, NDA exports).
+# Never committed — only _local_reference/README.md is tracked.
+# -----------------------------------------------------------------------------
+_local_reference/**
+!_local_reference/README.md

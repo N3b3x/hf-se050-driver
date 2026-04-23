@@ -1,0 +1,5 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/hf_se050_build_settings.cmake")
+
+check_required_components(hf_se050)

@@ -1,0 +1,121 @@
+/* =============================================================================
+   Custom CSS for HardFOC Driver Documentation
+   =============================================================================
+   This file contains custom styles to enhance the Just the Docs theme.
+   All styles are designed to work with both light and dark themes.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Navigation Enhancements
+   ----------------------------------------------------------------------------- */
+
+/* Ensure navigation dropdowns work properly */
+.nav-list .nav-list-item .nav-list-expander {
+  display: block;
+}
+
+.nav-list .nav-list-item .nav-list-link {
+  display: block;
+}
+
+/* Ensure proper z-index for navigation */
+.nav-list {
+  z-index: 100;
+}
+
+/* Fix any potential overflow issues */
+.site-nav {
+  overflow: visible;
+}
+
+/* Ensure navigation items are properly positioned */
+.nav-list .nav-list-item {
+  position: relative;
+}
+
+/* -----------------------------------------------------------------------------
+   Code Block Enhancements
+   ----------------------------------------------------------------------------- */
+
+/* Improve code block readability */
+.highlight {
+  border-radius: 0.375rem;
+  overflow-x: auto;
+}
+
+/* Better spacing for code blocks */
+pre {
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Inline code styling */
+code {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* -----------------------------------------------------------------------------
+   Callout Enhancements
+   ----------------------------------------------------------------------------- */
+
+/* Ensure callouts have proper spacing */
+.callout {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 0.375rem;
+}
+
+/* -----------------------------------------------------------------------------
+   Table Enhancements
+   ----------------------------------------------------------------------------- */
+
+/* Better table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+table th,
+table td {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+}
+
+table th {
+  background-color: var(--search-result-bg);
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------------
+   Responsive Design
+   ----------------------------------------------------------------------------- */
+
+/* Ensure proper mobile behavior */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .workflow-badges {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Print Styles
+   ----------------------------------------------------------------------------- */
+
+@media print {
+  /* Ensure proper page breaks */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  pre, code, table {
+    page-break-inside: avoid;
+  }
+}
+

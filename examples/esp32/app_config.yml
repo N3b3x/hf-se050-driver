@@ -1,0 +1,49 @@
+---
+# ESP32 HF-SE050 Driver — app matrix for build scripts / CI
+version: "1.0"
+
+metadata:
+  project: "ESP32 HF-SE050 Driver Examples"
+  default_app: "se050_minimal_example"
+  target: "esp32s3"
+  idf_versions: ["release/v5.5", "release/v5.4"]
+  build_types: [["Debug", "Release"], ["Debug"]]
+
+apps:
+  se050_minimal_example:
+    description: "Scaffold — logs version string; SE050 I2C bring-up TBD"
+    source_file: "se050_minimal_example.cpp"
+    category: "example"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: false
+    features:
+      - "Placeholder main; no APDU traffic yet"
+      - "I2C pin mux and SE050 address TBD after hardware review"
+
+build_config:
+  build_types:
+    Debug:
+      description: "Debug build"
+      cmake_build_type: "Debug"
+      optimization: "-O0"
+      debug_level: "-g3"
+      defines: ["DEBUG"]
+
+    Release:
+      description: "Release build"
+      cmake_build_type: "Release"
+      optimization: "-O2"
+      debug_level: "-g0"
+      defines: ["NDEBUG"]
+
+  build_directory_pattern: "build-app-{app_type}-type-{build_type}-target-{target}-idf-{idf_version}"
+  project_name_pattern: "esp32_se050_{app_type}_app"
+
+ci_config:
+  timeout_minutes: 30
+  fail_fast: false
+  exclude_combinations: []
+  special_apps: []
