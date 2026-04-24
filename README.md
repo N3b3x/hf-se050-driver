@@ -1,6 +1,6 @@
 # hf-se050-driver
 
-Scaffold for an **NXP SE050 / SE050A EdgeLock™ secure element** driver (I²C), aligned with other `hf-*-driver` repos under `hf-core-drivers/external`.
+**NXP SE050 / SE050A EdgeLock™ secure element** driver (I²C), aligned with other `hf-*-driver` repos under `hf-core-drivers/external`. Board integration on HardFOC stacks typically goes through **`Se050Handler`** in **hf-core** (see `docs/platform_integration.md` and hf-core `docs/handlers/se050_handler.md`).
 
 ## Status
 
@@ -35,6 +35,16 @@ Default target in `app_config.yml` is **esp32s3**.
 
 - `docs/examples.md` — example-by-example internals with SVG sequence diagrams.
 - `docs/security_iot_ota_comms.md` — practical security flows for IoT onboarding, OTA trust chain, and board-to-board comms (Ethernet/TLS first, app-layer fallback).
+
+## API documentation (Doxygen)
+
+From the repository root (after installing **`doxygen`**):
+
+```bash
+./scripts/build_doxygen.sh
+```
+
+Output location is set by **`OUTPUT_DIRECTORY`** in **`_config/Doxyfile`** (default under `docs/`). GitHub Actions uses the same **`_config/Doxyfile`** (see **`.github/workflows/ci-docs-publish.yml`**).
 
 ## CMake (host / generic)
 

@@ -33,4 +33,4 @@ See **`examples/esp32/main/include/hf_se050_esp_i2c.hpp`** — ESP-IDF `i2c_mast
 
 ## Handler layer (`hf-core`)
 
-A future **`Se050Handler`** will mirror **`Fdo2Handler`**: wrap **`BaseI2c`** (and optional **`BaseGpio`**) in a small adapter class that inherits **`se050::I2cTransceiveInterface<>`**, add **`RtosMutex`**, and own **`se050::Device<Adapter>`**.
+**`Se050Handler`** (in [`hf-core`](https://github.com/hardfoc/hf-core/tree/main/handlers/se050)) mirrors **`Fdo2Handler`**: it wraps **`BaseI2c`** and optional **`BaseGpio`** (`SE_RESET`) in **`HalI2cSe050Comm`** implementing **`se050::I2cTransceiveInterface`**, adds **`RtosMutex`**, and owns **`se050::Device<HalI2cSe050Comm>`**. Enable with **`HF_CORE_ENABLE_SE050`** before including `hf_core_build_settings.cmake`. On ESP32, from `hf-core/examples/esp32/scripts`, run `./build_app.sh se050_handler_test Debug`. HAL integration and reset semantics are documented in hf-core under **`docs/handlers/se050_handler.md`** (see the [published hf-core docs](https://hardfoc.github.io/hf-core/)).

@@ -14,11 +14,11 @@ This site tracks the [`docs/`](https://github.com/N3b3x/hf-se050-driver/tree/mai
 
 ## Structure
 
-1. **[Installation](installation.md)** — Toolchain and repo layout  
+1. **[Installation](installation.md)** — Toolchain, repo layout, and local **Doxygen** build  
 2. **[Quick start](quickstart.md)** — Planned bring-up flow  
 3. **[Hardware setup](hardware_setup.md)** — I²C and board notes  
 4. **[CMake integration](cmake_integration.md)** — `hf::se050` and ESP-IDF component  
-4b. **[Platform integration](platform_integration.md)** — CRTP I2C transport  
+4b. **[Platform integration](platform_integration.md)** — CRTP I2C transport and **hf-core `Se050Handler`**  
 5. **[API reference](api_reference.md)** — Transport, session, device templates  
 6. **[Examples](examples.md)** — All ESP32 example flows + internal diagrams  
 7. **[Troubleshooting](troubleshooting.md)** — Common issues while developing  
