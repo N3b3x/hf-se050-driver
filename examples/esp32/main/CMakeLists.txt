@@ -34,6 +34,7 @@ set(MAIN_REQUIRES
     freertos
     log
     hf_se050
+    mbedtls
 )
 
 idf_component_register(

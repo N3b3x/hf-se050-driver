@@ -16,6 +16,8 @@ The driver is built around **`se050::I2cTransceiveInterface<Derived>`** — comp
 | Method | Purpose |
 |--------|---------|
 | `bool EnsureInitialized() noexcept` | One-time bus + device setup. |
+| `Error I2cWrite(const uint8_t* tx, size_t tx_len, uint32_t timeout_ms) noexcept` | Low-level write path used by T=1 block transport. |
+| `Error I2cRead(uint8_t* rx, size_t rx_len, uint32_t timeout_ms) noexcept` | Low-level read path used by T=1 block transport. |
 | `Error Transceive(const uint8_t* tx, size_t tx_len, uint8_t* rx, size_t rx_cap, size_t* rx_len_out, uint32_t timeout_ms) noexcept` | Atomic write/read at the SE050 7-bit address. |
 | `Error HardwareReset() noexcept` | Pulse SE_RESET when wired; return `Ok` if not used. |
 

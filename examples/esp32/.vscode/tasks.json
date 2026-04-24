@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Secure Board Comms Example",
+			"type": "shell",
+			"command": "./scripts/build_app.sh se050_secure_board_comms_example Debug release/v5.5",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		}
+	]
+}

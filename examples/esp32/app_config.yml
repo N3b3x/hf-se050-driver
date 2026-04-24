@@ -11,17 +11,86 @@ metadata:
 
 apps:
   se050_minimal_example:
-    description: "Phase 1 — CRTP I2C transport + Device; default SDA=47 SCL=48 @100kHz addr 0x48"
+    description: "Bring-up: reset, T=1 warm reset, GET ATR, SELECT default applet"
     source_file: "se050_minimal_example.cpp"
     category: "example"
     idf_versions: ["release/v5.5"]
     build_types: ["Debug", "Release"]
     ci_enabled: true
     featured: true
-    hardware_required: false
+    hardware_required: true
     features:
-      - "Placeholder main; no APDU traffic yet"
-      - "I2C pin mux and SE050 address TBD after hardware review"
+      - "CRTP I2C transport + T=1 path validation"
+      - "ATR/profile and applet selection smoke checks"
+
+  se050_smoke_example:
+    description: "Smoke: init/reset/ATR/select/get-version/get-random/get-free-memory"
+    source_file: "se050_smoke_example.cpp"
+    category: "test"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "Exercises typed management APDUs on real silicon"
+      - "Parses ATR profile and applet capabilities"
+
+  se050_object_lifecycle_example:
+    description: "Object lifecycle: write/read/delete binary object"
+    source_file: "se050_object_lifecycle_example.cpp"
+    category: "test"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "WriteBinary with create semantics"
+      - "ReadObject round-trip data verification"
+      - "DeleteSecureObject cleanup"
+
+  se050_cloud_onboarding_example:
+    description: "Cloud onboarding: EC P-256 keygen + ECDSA challenge sign/verify"
+    source_file: "se050_cloud_onboarding_example.cpp"
+    category: "example"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "Generate persistent EC keypair in SE050"
+      - "Sign registration challenge digest inside secure element"
+      - "Verify signature on-chip for provisioning sanity check"
+
+  se050_secure_board_comms_example:
+    description: "App-layer comms: Sender signs payload hash, Receiver verifies it"
+    source_file: "se050_secure_board_comms_example.cpp"
+    category: "example"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "Demonstrates Board A sending a secure packet to Board B"
+      - "Uses mbedtls_sha256 mixed with SE050 EcdsaSign"
+      - "Shows proper anti-replay and nonce generation"
+
+  se050_cloud_registration_packet_example:
+    description: "Cloud registration packet: key existence/create + pubkey + challenge signature"
+    source_file: "se050_cloud_registration_packet_example.cpp"
+    category: "example"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "Idempotent object flow via CheckObjectExists"
+      - "Read public key material for backend enrollment payload"
+      - "Generate challenge and ECDSA signature for registration proof"
 
 build_config:
   build_types:

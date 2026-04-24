@@ -31,6 +31,15 @@ Set `ESPPORT` if needed (for example `export ESPPORT=/dev/ttyACM0`).
 
 Override by constructing `hf_se050_examples::Se050EspI2cConfig` before `HfSe050EspIdfI2c`.
 
-## Status
+## Available apps
 
-**Phase 1** — CRTP transport, `se050::Device`, and a trivial `TransceiveRaw` probe. **T=1 / APDU** come next; see repo `README.md` and `docs/platform_integration.md`.
+- `se050_minimal_example` — reset + T=1 warm reset + GET ATR + SELECT applet
+- `se050_smoke_example` — adds GetVersion/GetRandom/GetFreeMemory typed APDU checks
+- `se050_object_lifecycle_example` — write/read/delete binary object lifecycle round-trip
+- `se050_cloud_onboarding_example` — generate P-256 key, sign onboarding challenge digest, verify signature on-chip
+- `se050_cloud_registration_packet_example` — idempotent key provisioning + public key read + challenge signature payload
+
+## Security learning docs
+
+- `docs/examples.md` — internals for each app + SVG flow diagrams
+- `docs/security_iot_ota_comms.md` — IoT onboarding, OTA trust chain, Ethernet/TLS and app-layer comms security patterns

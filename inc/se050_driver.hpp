@@ -1,14 +1,22 @@
 /**
  * @file se050_driver.hpp
- * @brief Umbrella include for the HF-SE050 driver (transport + device).
+ * @brief Umbrella include for the HF-SE050 driver (transport + T=1 + APDU + device).
  *
  * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
  */
 #pragma once
 
+#include "se050_apdu.hpp"
+#include "se050_applet.hpp"
+#include "se050_atr.hpp"
+#include "se050_commands.hpp"
+#include "se050_crc.hpp"
 #include "se050_device.hpp"
 #include "se050_i2c_transport_interface.hpp"
+#include "se050_scp03.hpp"
 #include "se050_session.hpp"
+#include "se050_t1_session.hpp"
+#include "se050_tlv.hpp"
 #include "se050_types.hpp"
 
 namespace se050 {

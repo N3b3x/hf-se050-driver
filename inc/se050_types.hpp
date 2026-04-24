@@ -18,8 +18,14 @@ enum class Error : std::uint8_t {
     Timeout,
     InvalidArgument,
     BufferTooSmall,
-    /** Reserved for T=1 / APDU layers (future). */
+    /** T=1 NAD/PCB/sequence/CRC or response framing violation. */
     Protocol,
+    /** EDC mismatch on a received T=1 block. */
+    Crc,
+    /** Block sequence number did not match the protocol state. */
+    Sequence,
+    /** Feature not compiled / not available on this build (e.g. SCP03 crypto hooks). */
+    NotSupported,
 };
 
 /** Default 7-bit I2C address for SE050 class parts (see NXP / board docs). */

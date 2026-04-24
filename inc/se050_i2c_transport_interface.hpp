@@ -1,10 +1,13 @@
 /**
  * @file se050_i2c_transport_interface.hpp
- * @brief CRTP transport for SE050 on I2C (T=1 / APDU bytes move as opaque blocks).
+ * @brief CRTP base for an I²C-backed SE050 link (split @p Write / @p Read + optional raw transceive).
  *
- * Unlike register-oriented I2C drivers, the secure element expects framed
- * command/response exchanges at a fixed slave address. Platform code implements
- * this interface (e.g. ESP-IDF `i2c_master_transmit_receive`).
+ * @details T=1 over I²C (UM11225 / UM1225 family) requires the host to **write** a full outbound
+ *          block, wait an inter-frame guard time, then **read** the answer in one or more chunks.
+ *          A single `transmit_receive` covering the whole card response is often **not** portable
+ *          because the target may NACK until the block is complete. Implementations therefore
+ *          expose explicit @ref Write and @ref Read entry points; @ref Transceive remains for
+ *          bring-up and legacy callers.
  *
  * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
  */
@@ -14,59 +17,59 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <type_traits>
 
 namespace se050 {
 
 /**
- * @brief CRTP base for low-level SE050 I2C exchange.
- * @tparam Derived Concrete type (e.g. `HfSe050EspIdfI2c`).
+ * @brief Curiously recurring transport interface for SE050 I²C masters.
+ * @tparam Derived Concrete transport (`class D : public I2cTransceiveInterface<D>`).
+ *
+ * @par Derived requirements
+ * The derived type must implement (all `noexcept`):
+ * - `bool EnsureInitialized() noexcept`
+ * - `Error I2cWrite(const std::uint8_t* tx, std::size_t tx_len, std::uint32_t timeout_ms) noexcept`
+ * - `Error I2cRead(std::uint8_t* rx, std::size_t rx_len, std::uint32_t timeout_ms) noexcept`
+ * - `Error Transceive(const std::uint8_t* tx, std::size_t tx_len, std::uint8_t* rx, std::size_t rx_cap,
+ *                     std::size_t* rx_len_out, std::uint32_t timeout_ms) noexcept`
+ * - `Error HardwareReset() noexcept`
+ * - `void delay_ms_impl(std::uint32_t ms) noexcept`
  */
 template <typename Derived>
 class I2cTransceiveInterface {
 public:
+    I2cTransceiveInterface() noexcept = default;
+    I2cTransceiveInterface(const I2cTransceiveInterface&) = delete;
+    I2cTransceiveInterface& operator=(const I2cTransceiveInterface&) = delete;
+
+    /** @brief One-shot write of @p tx_len bytes to the SE050 I²C target address. */
+    [[nodiscard]] Error Write(const std::uint8_t* tx, std::size_t tx_len,
+                              std::uint32_t timeout_ms) noexcept {
+        return static_cast<Derived*>(this)->I2cWrite(tx, tx_len, timeout_ms);
+    }
+
+    /** @brief Read exactly @p rx_len bytes from the SE050 (blocking until complete or error). */
+    [[nodiscard]] Error Read(std::uint8_t* rx, std::size_t rx_len, std::uint32_t timeout_ms) noexcept {
+        return static_cast<Derived*>(this)->I2cRead(rx, rx_len, timeout_ms);
+    }
+
     [[nodiscard]] bool EnsureInitialized() noexcept {
         return static_cast<Derived*>(this)->EnsureInitialized();
     }
 
-    /**
-     * @brief Atomic write-then-read at the SE050 I2C address (typical for T=1).
-     * @param tx          Bytes to transmit (may be nullptr if @p tx_len == 0).
-     * @param tx_len      Number of bytes to transmit.
-     * @param rx          Receive buffer.
-     * @param rx_cap      Capacity of @p rx in bytes.
-     * @param rx_len_out  Filled with bytes actually read on success.
-     * @param timeout_ms  Bus transaction deadline.
-     */
     [[nodiscard]] Error Transceive(const std::uint8_t* tx, std::size_t tx_len, std::uint8_t* rx,
                                    std::size_t rx_cap, std::size_t* rx_len_out,
                                    std::uint32_t timeout_ms) noexcept {
-        return static_cast<Derived*>(this)->Transceive(tx, tx_len, rx, rx_cap, rx_len_out,
-                                                      timeout_ms);
+        return static_cast<Derived*>(this)->Transceive(tx, tx_len, rx, rx_cap, rx_len_out, timeout_ms);
     }
 
-    /** Optional inter-frame delay (implemented via `delay_ms_impl` on Derived). */
-    void delay_ms(std::uint32_t ms) noexcept {
-        if constexpr (HasDelayMs<Derived>::value) {
-            static_cast<Derived*>(this)->delay_ms_impl(ms);
-        } else {
-            (void)ms;
-        }
-    }
+    [[nodiscard]] Error HardwareReset() noexcept { return static_cast<Derived*>(this)->HardwareReset(); }
 
-    /**
-     * @brief Hardware reset of SE050 (SE_RESET pin) when wired; otherwise no-op `Ok`.
-     */
-    [[nodiscard]] Error HardwareReset() noexcept {
-        return static_cast<Derived*>(this)->HardwareReset();
-    }
+    void delay_ms(std::uint32_t ms) noexcept { static_cast<Derived*>(this)->delay_ms_impl(ms); }
 
-private:
-    template <typename, typename = void>
-    struct HasDelayMs : std::false_type {};
-    template <typename T>
-    struct HasDelayMs<T, std::void_t<decltype(std::declval<T>().delay_ms_impl(0U))>>
-        : std::true_type {};
+protected:
+    ~I2cTransceiveInterface() noexcept = default;
+    I2cTransceiveInterface(I2cTransceiveInterface&&) noexcept = default;
+    I2cTransceiveInterface& operator=(I2cTransceiveInterface&&) noexcept = default;
 };
 
 }  // namespace se050

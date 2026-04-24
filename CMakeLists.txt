@@ -7,7 +7,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(hf_se050
-  VERSION 0.2.0
+  VERSION 0.3.0
   LANGUAGES CXX
 )
 

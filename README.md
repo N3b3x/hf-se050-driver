@@ -4,8 +4,8 @@ Scaffold for an **NXP SE050 / SE050A EdgeLock™ secure element** driver (I²C),
 
 ## Status
 
-- **Phase 1 (done):** `se050::I2cTransceiveInterface` (CRTP), `Session`, `Device`, ESP-IDF example transport (`HfSe050EspIdfI2c`), minimal `se050_minimal_example` build.
-- **Next:** T=1 over I2C, APDU, SCP03, applet APIs — see `docs/platform_integration.md`.
+- **Implemented:** CRTP transport, `Session`, `T1Session` (CRC/chaining + WTX/resync handling), `Device`, ATR parser, typed APDU foundations (`GetVersion`, `GetRandom`, `GetFreeMemory`, binary object write/read/delete), ESP-IDF transport + runnable examples.
+- **Next:** expand command families (crypto/session/policy), complete SCP03 secure messaging backend, and add broader test matrices.
 - **Local reference material:** put datasheets, old code, and NDA-restricted exports under `_local_reference/` (see that folder’s README). That tree is **gitignored** and will not sync to GitHub.
 
 ## Layout
@@ -30,6 +30,11 @@ From `examples/esp32/` (after `git submodule update --init --recursive`):
 ```
 
 Default target in `app_config.yml` is **esp32s3**.
+
+## Security documentation
+
+- `docs/examples.md` — example-by-example internals with SVG sequence diagrams.
+- `docs/security_iot_ota_comms.md` — practical security flows for IoT onboarding, OTA trust chain, and board-to-board comms (Ethernet/TLS first, app-layer fallback).
 
 ## CMake (host / generic)
 

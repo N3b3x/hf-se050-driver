@@ -114,6 +114,42 @@ public:
         inited_ = false;
     }
 
+    [[nodiscard]] se050::Error I2cWrite(const std::uint8_t* tx, std::size_t tx_len,
+                                        std::uint32_t timeout_ms) noexcept {
+        if (tx == nullptr || tx_len == 0U) {
+            return se050::Error::InvalidArgument;
+        }
+        if (!EnsureInitialized()) {
+            return se050::Error::NotInitialized;
+        }
+        const int xfer_timeout =
+            (timeout_ms > static_cast<std::uint32_t>(INT_MAX)) ? INT_MAX : static_cast<int>(timeout_ms);
+        const esp_err_t err = i2c_master_transmit(dev_, tx, tx_len, xfer_timeout);
+        if (err != ESP_OK) {
+            ESP_LOGW(tag_, "I2C write err=%s", esp_err_to_name(err));
+            return se050::Error::Transport;
+        }
+        return se050::Error::Ok;
+    }
+
+    [[nodiscard]] se050::Error I2cRead(std::uint8_t* rx, std::size_t rx_len, std::uint32_t timeout_ms) noexcept {
+        if (rx == nullptr || rx_len == 0U) {
+            return se050::Error::InvalidArgument;
+        }
+        if (!EnsureInitialized()) {
+            return se050::Error::NotInitialized;
+        }
+        std::memset(rx, 0, rx_len);
+        const int xfer_timeout =
+            (timeout_ms > static_cast<std::uint32_t>(INT_MAX)) ? INT_MAX : static_cast<int>(timeout_ms);
+        const esp_err_t err = i2c_master_receive(dev_, rx, rx_len, xfer_timeout);
+        if (err != ESP_OK) {
+            ESP_LOGW(tag_, "I2C read err=%s", esp_err_to_name(err));
+            return se050::Error::Transport;
+        }
+        return se050::Error::Ok;
+    }
+
     [[nodiscard]] se050::Error Transceive(const std::uint8_t* tx, std::size_t tx_len, std::uint8_t* rx,
                                           std::size_t rx_cap, std::size_t* rx_len_out,
                                           std::uint32_t timeout_ms) noexcept {
@@ -121,37 +157,34 @@ public:
             return se050::Error::InvalidArgument;
         }
         *rx_len_out = 0;
+        if (tx_len == 0U) {
+            return se050::Error::InvalidArgument;
+        }
         if (!EnsureInitialized()) {
             return se050::Error::NotInitialized;
         }
-        if (rx != nullptr && rx_cap > 0) {
-            std::memset(rx, 0, rx_cap);
-        }
-        const int xfer_timeout = (timeout_ms > static_cast<std::uint32_t>(INT_MAX)) ? INT_MAX : static_cast<int>(timeout_ms);
+        const int xfer_timeout =
+            (timeout_ms > static_cast<std::uint32_t>(INT_MAX)) ? INT_MAX : static_cast<int>(timeout_ms);
 
-        esp_err_t err = ESP_FAIL;
-        if (tx_len == 0U) {
-            if (rx == nullptr || rx_cap == 0U) {
-                return se050::Error::InvalidArgument;
+        if (rx_cap == 0U || rx == nullptr) {
+            const esp_err_t err = i2c_master_transmit(dev_, tx, tx_len, xfer_timeout);
+            if (err != ESP_OK) {
+                ESP_LOGW(tag_, "I2C transmit err=%s", esp_err_to_name(err));
+                return se050::Error::Transport;
             }
-            err = i2c_master_receive(dev_, rx, rx_cap, xfer_timeout);
-            if (err == ESP_OK) {
-                *rx_len_out = rx_cap;
-            }
-        } else if (rx_cap == 0U || rx == nullptr) {
-            err = i2c_master_transmit(dev_, tx, tx_len, xfer_timeout);
-        } else {
-            err = i2c_master_transmit_receive(dev_, tx, tx_len, rx, rx_cap, xfer_timeout);
-            if (err == ESP_OK) {
-                *rx_len_out = rx_cap;
-            }
+            return se050::Error::Ok;
         }
 
-        if (err != ESP_OK) {
-            ESP_LOGW(tag_, "I2C xfer err=%s", esp_err_to_name(err));
-            return se050::Error::Transport;
+        const se050::Error w = I2cWrite(tx, tx_len, timeout_ms);
+        if (w != se050::Error::Ok) {
+            return w;
         }
-        return se050::Error::Ok;
+        delay_ms_impl(2);
+        const se050::Error r = I2cRead(rx, rx_cap, timeout_ms);
+        if (r == se050::Error::Ok) {
+            *rx_len_out = rx_cap;
+        }
+        return r;
     }
 
     void delay_ms_impl(std::uint32_t ms) noexcept { vTaskDelay(pdMS_TO_TICKS(ms)); }
