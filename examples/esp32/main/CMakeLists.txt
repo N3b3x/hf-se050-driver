@@ -31,6 +31,11 @@ set(MAIN_REQUIRES
     driver
     esp_driver_i2c
     esp_driver_gpio
+    esp_adc
+    esp_wifi
+    esp_event
+    esp_netif
+    nvs_flash
     freertos
     log
     hf_se050

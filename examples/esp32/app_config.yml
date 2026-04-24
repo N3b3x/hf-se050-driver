@@ -92,6 +92,22 @@ apps:
       - "Read public key material for backend enrollment payload"
       - "Generate challenge and ECDSA signature for registration proof"
 
+  se050_aws_iot_lifecycle:
+    description: "End-to-end IoT lifecycle: provision -> WiFi -> TLS id -> MQTT telemetry -> OTA verify"
+    source_file: "se050_aws_iot_lifecycle/se050_aws_iot_lifecycle.cpp"
+    category: "example"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "Stage 1: factory-style provisioning (keygen + CSR sign + cert install)"
+      - "Stage 2: WiFi bring-up with NVS + event loop"
+      - "Stage 3: mbedTLS ECDSA sign delegated to SE050 (identity hook)"
+      - "Stage 4: ADC oversample + per-message SE050-signed MQTT telemetry"
+      - "Stage 5: ECDSA-verify OTA manifest against on-chip vendor public key"
+
 build_config:
   build_types:
     Debug:
