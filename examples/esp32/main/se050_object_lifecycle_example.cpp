@@ -1,6 +1,18 @@
 /**
  * @file se050_object_lifecycle_example.cpp
- * @brief ESP32 object lifecycle test: write/read/delete binary object.
+ * @brief NVRAM Secure Object CRUD (Create, Read, Update, Delete) Lifecycle Example.
+ *
+ * This example demonstrates the process of managing persistent binary objects
+ * (like certificates, public keys, or policies) in the SE050's tamper-proof memory.
+ * It showcases the full CRUD lifecycle on a designated 0xF000... object slot.
+ *
+ * **Lifecycle Flow:**
+ * 1. `WriteBinary`: Creates a new binary object at slot ID (e.g., 0xF0010001) with literal payload.
+ * 2. `ReadObject`: Retrieves the payload to verify stored integrity.
+ * 3. `DeleteSecureObject`: Securely wipes the object from NVRAM, freeing the slot memory.
+ *
+ * @note This operation performs physical NAND/EEPROM writes on the SE050; excessive repeated
+ *       executions could affect flash wear over time if looped indefinitely.
  */
 #include "esp_log.h"
 

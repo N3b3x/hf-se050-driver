@@ -1,6 +1,18 @@
 /**
  * @file se050_minimal_example.cpp
- * @brief ESP32 bring-up: electrical reset, T=1 **GET ATR**, optional **SELECT** default IoT applet.
+ * @brief Minimal Bring-up Example for the SE050 Secure Element on ESP32.
+ *
+ * This file contains a minimal, zero-dependency bring-up sequence for the NXP SE050.
+ * It is designed to act as the absolute baseline verification that the SE050 is
+ * electrically connected, responding to I2C communication, and handling the core
+ * ISO7816-3 T=1 protocol layer properly.
+ * 
+ * **Example Flow:**
+ * 1. `EnsureInitialized()`: Prepares the underlying hardware I2C bus and sets timeouts.
+ * 2. `HardwareReset()`: Physically toggles the SE050 reset pin (if wired).
+ * 3. `ChipWarmReset()`: Performs the T=1 base protocol initialization.
+ * 4. `GetAnswerToReset()`: Retrieves the chip's default Answer-To-Reset signature.
+ * 5. `SelectDefaultIoTApplet()`: Selects the IoT applet, returning the APDU status words.
  *
  * @note Requires a wired SE050. Logged `se050::Error` values diagnose transport vs protocol layers.
  */

@@ -1,6 +1,20 @@
 /**
  * @file se050_smoke_example.cpp
- * @brief ESP32 smoke test: init/reset/ATR/select/version/random/memory.
+ * @brief Complete System Smoke Test & Diagnostics for SE050.
+ *
+ * This expanded demonstration runs a full diagnostic sweep on the SE050 device.
+ * It is meant for initial hardware integration validation and verifying that the
+ * core hardware cryptographic elements (such as the TRNG module) and internal 
+ * file system (NVRAM capacity) are fully accessible.
+ *
+ * **Smoke Test Sequence:**
+ * 1. Initialize link and decode the Answer-To-Reset (ATR) profile.
+ * 2. Select the Applet to establish the secure session context.
+ * 3. Query `GetVersion` to check the current SE050 secure-box state.
+ * 4. Request `GetRandom` to exercise the hardware TRNG entropy.
+ * 5. Call `GetFreeMemory` to ensure the internal NVRAM filesystem operates normally.
+ *
+ * @note This should be run on a fresh or suspected-failing board to confirm IC health.
  */
 #include "esp_log.h"
 

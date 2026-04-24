@@ -1,6 +1,19 @@
 /**
  * @file se050_cloud_onboarding_example.cpp
- * @brief Cloud onboarding-style flow: generate ECC key, sign challenge digest, verify in SE050.
+ * @brief Core Identity Primitive generation and cryptographic validation demo.
+ *
+ * Simulates the primary enrollment step for securing a device identity:
+ * forcing the Hardware Root of Trust to generate a persistent Elliptic Curve
+ * private key. It verifies the key generation by simulating a cryptographic
+ * challenge, requesting an ECDSA signature, and validating the returned ASN.1 DER signature.
+ *
+ * **Identity Flow:**
+ * 1. Generate an internal non-exportable NIST-P256 Elliptic Curve Key inside SE050.
+ * 2. Create a "fake" custom digest on the MCU to act as a challenge payload.
+ * 3. `EcdsaSign`: Issue an APDU instructing the SE050 to sign the digest.
+ * 4. `EcdsaVerify`: (Sanity Check) Supply the signature back to the SE050 to verify it locally.
+ *
+ * @note Ensures the device has legitimately derived identity materials.
  */
 #include "esp_log.h"
 

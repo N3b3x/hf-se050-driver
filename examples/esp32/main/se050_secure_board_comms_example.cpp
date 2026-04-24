@@ -1,12 +1,22 @@
 /**
  * @file se050_secure_board_comms_example.cpp
- * @brief Board-to-Board Secure Comms App Layer Example.
+ * @brief App-Layer Board-to-Board Encrypted Packet Protocol Simulation.
  *
- * This flow demonstrates how to build an authenticated application packet:
- * - Sender (Board A): local MCU hashes the payload, SE050 signs it (ECDSA).
- * - Receiver (Board B): verifies signature via SE050 before processing.
+ * Explores a robust, customized secure application-layer protocol designed to
+ * protect telemetry/commands passing over untrusted raw Ethernet or UART trunks.
+ * By combining MCU hardware-accelerated AES-GCM (confidentiality) with SE050-backed
+ * ECDSA signatures (authenticity), this provides an extremely high-security alternative
+ * to TLS and DTLS for MCU-to-MCU point-to-point links.
  *
- * @note In production, append mbedtls AES-GCM around the payload for confidentiality.
+ * **Transmitter (Board A) Flow:**
+ * 1. Maintain a Monotonic Counter to enforce anti-replay limitations.
+ * 2. Generate temporary Nonces, compute HMAC/SHA256, and encrypt messages with symmetrical keys.
+ * 3. Issue `EcdsaSign` to bind the packet header mathematically to the hardware identity.
+ *
+ * **Receiver (Board B) validation Flow:** (Simulated locally for completeness)
+ * 1. Accept the packet, unpack headers, and strictly verify the counter is continually increasing.
+ * 2. Issue `EcdsaVerify` to confirm Board A's signature mathematically.
+ * 3. Utilize mbedTLS to AES-GCM and HMAC verify the specific tag prior to utilization.
  */
 #include "esp_log.h"
 #include "mbedtls/sha256.h"

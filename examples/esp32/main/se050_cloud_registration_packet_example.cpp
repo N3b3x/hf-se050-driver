@@ -1,6 +1,18 @@
 /**
  * @file se050_cloud_registration_packet_example.cpp
- * @brief Build cloud registration artifacts: key id, pubkey, challenge, signature.
+ * @brief Hardware Cloud Registration Payload Generation.
+ *
+ * Demonstrates producing a backend-ready identity artifact (JSON/struct data)
+ * capable of proving cryptographic identity to an external cloud or device registry.
+ * It queries existence, exports public key parameters, and actively signs a challenge.
+ *
+ * **Execution Flow:**
+ * 1. Perform an idempotent check with `CheckObjectExists`.
+ * 2. Generate or ensure the ECDSA Key Pair is populated.
+ * 3. Invoke `ReadPublicEcKey` to grab the exportable public component for the cloud server.
+ * 4. Execute `GetRandom` to generate a 32-byte session challenge.
+ * 5. Sign the challenge mathematically using the protected private key via `EcdsaSign`.
+ * 6. Display the resulting payload values to be encapsulated in a cloud API structure.
  */
 #include "esp_log.h"
 
