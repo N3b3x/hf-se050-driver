@@ -9,6 +9,12 @@ production medical / industrial IoT device's life:
 3. **TLS identity** — mbedTLS delegates ECDSA sign to the SE050
 4. **Steady-state telemetry** — ADC oversample → JSON → SE050 sign → MQTT
 5. **OTA verify** — ECDSA-verify firmware manifest against on-chip trust anchor
+6. **Cloud control channel** — signed commands for ping / re-provision / OTA / config
+
+> **Security posture, threat model, factory procedure, secure-boot
+> chain (ESP32 + STM32H7 + nRF + i.MX), pen-test plan, and
+> FDA-submission checklist live in [SECURITY.md](./SECURITY.md).
+> Read that first if you're building a medical-grade product.**
 
 Everything lives inside this directory and compiles as a single ESP-IDF
 application so you can flash → monitor → understand in one pass.
@@ -21,12 +27,14 @@ application so you can flash → monitor → understand in one pass.
 se050_aws_iot_lifecycle/
 ├── se050_aws_iot_lifecycle.cpp   ← main entry (the file in app_config.yml)
 ├── lifecycle_config.hpp          ← slot IDs, AWS endpoint, WiFi, feature flags
-├── stage_provisioning.hpp        ← STAGE 1
+├── stage_provisioning.hpp        ← STAGE 1 + re-provisioning (signed token)
 ├── stage_bootstrap.hpp           ← STAGE 2
 ├── stage_tls_identity.hpp        ← STAGE 3
 ├── stage_telemetry.hpp           ← STAGE 4
 ├── stage_ota_verify.hpp          ← STAGE 5
-└── README.md                     ← this file
+├── stage_control.hpp             ← STAGE 6 (signed cloud commands)
+├── README.md                     ← this file
+└── SECURITY.md                   ← FDA-grade security architecture doc
 ```
 
 The *entry* `.cpp` simply calls `RunStage()` on each stage in order. All

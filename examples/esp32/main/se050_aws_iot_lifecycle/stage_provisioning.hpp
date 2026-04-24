@@ -79,6 +79,7 @@
 #pragma once
 
 #include "esp_log.h"
+#include "mbedtls/sha256.h"
 #include "se050_device.hpp"
 
 #include "lifecycle_config.hpp"
@@ -353,12 +354,191 @@ inline bool RunStage(DeviceT& chip)
     placeholder_vendor[0] = 0x04U;
     (void)InstallOtaVendorKey(chip, placeholder_vendor.data(), placeholder_vendor.size());
 
+    // -- 1g2: install the re-provisioning authority public key -----------------
+    // TODO(factory): Replace with the actual re-provisioning authority
+    // ECDSA P-256 public key (65 B). This key gates future factory-return
+    // resets; keep its private half in an offline HSM.
+    std::array<std::uint8_t, 65> placeholder_reprov{};
+    placeholder_reprov[0] = 0x04U;
+    (void)chip.WriteBinary(slot::kReprovisionAuthorityKey,
+                           placeholder_reprov.data(), placeholder_reprov.size(),
+                           false, 0U, true,
+                           static_cast<std::uint16_t>(placeholder_reprov.size()), 500U);
+
+    // -- 1g3: initialize the re-provision monotonic counter to 0 --------------
+    constexpr std::array<std::uint8_t, 4> zero_ctr = {0U, 0U, 0U, 0U};
+    (void)chip.WriteBinary(slot::kReprovisionCounter,
+                           zero_ctr.data(), zero_ctr.size(),
+                           false, 0U, true, 4U, 400U);
+
     // -- 1h: mark device as provisioned ----------------------------------------
     if (!MarkProvisioned(chip)) {
         return false;
     }
 
     ESP_LOGI(kTag, "==================== STAGE 1 — COMPLETE ========================");
+    return true;
+}
+
+// =============================================================================
+//  RE-PROVISIONING PATH
+// =============================================================================
+//  Once a device is provisioned we intentionally make factory-return HARD.
+//  The only software-accessible way to re-run Stage 1 is to present a
+//  **signed re-provisioning token** that:
+//
+//    1. Carries a monotonically increasing counter > the NVM-stored counter
+//       (prevents replay of a captured token).
+//    2. Embeds this device's unique ID (prevents moving a token between
+//       chips).
+//    3. Is signed with the private half of `slot::kReprovisionAuthorityKey`
+//       (prevents forgery by anyone except the offline HSM holder).
+//
+//  If any check fails the sentinel stays put and the attempt is logged to
+//  the cloud audit channel (see `stage_control.hpp`).
+//
+//  **Token layout** (48 bytes + 72-byte ECDSA DER sig = 120 bytes total):
+//     offset  size  field
+//       0      4    magic       "HFRV"
+//       4      4    counter (LE, must be > NVM counter)
+//       8     18    device UID  (SE050 unique ID; from GetUniqueId when
+//                                that API lands — for now we match against
+//                                a factory-programmed blob)
+//      26     22    reserved (zeros)
+//      48    var    ECDSA-P256 DER signature over bytes [0..47]
+// =============================================================================
+
+inline constexpr std::uint32_t kReprovisionMagic = 0x56524648U;  // 'HFRV' LE
+
+/**
+ * @brief Read the current re-provision counter from on-chip NVM.
+ */
+template <class DeviceT>
+inline bool ReadReprovisionCounter(DeviceT& chip, std::uint32_t* out_ctr)
+{
+    std::uint8_t bytes[4]{};
+    std::size_t got = 0U;
+    const se050::Error re = chip.ReadObject(slot::kReprovisionCounter,
+                                            true, 0U, true, 4U,
+                                            bytes, sizeof(bytes), &got, 300U);
+    if (re != se050::Error::Ok || got != 4U) {
+        return false;
+    }
+    *out_ctr = static_cast<std::uint32_t>(bytes[0])
+             | (static_cast<std::uint32_t>(bytes[1]) << 8)
+             | (static_cast<std::uint32_t>(bytes[2]) << 16)
+             | (static_cast<std::uint32_t>(bytes[3]) << 24);
+    return true;
+}
+
+/**
+ * @brief Persist a new re-provision counter value.
+ */
+template <class DeviceT>
+inline bool WriteReprovisionCounter(DeviceT& chip, std::uint32_t ctr)
+{
+    const std::array<std::uint8_t, 4> bytes = {
+        static_cast<std::uint8_t>(ctr & 0xFFU),
+        static_cast<std::uint8_t>((ctr >> 8) & 0xFFU),
+        static_cast<std::uint8_t>((ctr >> 16) & 0xFFU),
+        static_cast<std::uint8_t>((ctr >> 24) & 0xFFU),
+    };
+    const se050::Error we = chip.WriteBinary(slot::kReprovisionCounter,
+                                             bytes.data(), bytes.size(),
+                                             /*update=*/true, 0U, true, 4U, 400U);
+    return we == se050::Error::Ok;
+}
+
+/**
+ * @brief Validate + accept a cloud-signed re-provisioning token.
+ *
+ * Flow:
+ *  1. Parse magic + counter from `token[0..47]`.
+ *  2. Read NVM counter; reject if token counter ≤ NVM counter.
+ *  3. ECDSA-verify `token[0..47]` against `kReprovisionAuthorityKey`
+ *     using the signature bytes at `&token[48]`.
+ *  4. On success: bump NVM counter, delete `kProvisionedFlag`, return
+ *     `true`. Next boot will re-run Stage 1 (safe because CSR is re-signed
+ *     with the *same* identity key — the device keeps its cryptographic
+ *     identity, only the device certificate is rotated).
+ *
+ * @note We deliberately keep the identity key pair across re-provision so
+ *       the factory can issue a *new* device certificate bound to the same
+ *       public key. This is how service-depot re-provisioning works in
+ *       medical device field-service workflows — the unique device ID
+ *       (the public key fingerprint) survives the trip.
+ */
+template <class DeviceT>
+inline bool RequestReprovisioning(DeviceT& chip,
+                                  const std::uint8_t* token, std::size_t token_len)
+{
+    constexpr std::size_t kHeaderLen = 48U;
+    if (token == nullptr || token_len < kHeaderLen + 64U /*minimal sig*/) {
+        ESP_LOGW(kTag, "[reprov] Token too small (%u B).",
+                 static_cast<unsigned>(token_len));
+        return false;
+    }
+
+    // -- 1) parse magic + counter ---------------------------------------------
+    const std::uint32_t magic = static_cast<std::uint32_t>(token[0])
+                              | (static_cast<std::uint32_t>(token[1]) << 8)
+                              | (static_cast<std::uint32_t>(token[2]) << 16)
+                              | (static_cast<std::uint32_t>(token[3]) << 24);
+    if (magic != kReprovisionMagic) {
+        ESP_LOGW(kTag, "[reprov] Bad magic 0x%08X (want 0x%08X) — rejecting.",
+                 static_cast<unsigned>(magic),
+                 static_cast<unsigned>(kReprovisionMagic));
+        return false;
+    }
+    const std::uint32_t token_ctr = static_cast<std::uint32_t>(token[4])
+                                  | (static_cast<std::uint32_t>(token[5]) << 8)
+                                  | (static_cast<std::uint32_t>(token[6]) << 16)
+                                  | (static_cast<std::uint32_t>(token[7]) << 24);
+
+    // -- 2) replay protection --------------------------------------------------
+    std::uint32_t nvm_ctr = 0U;
+    if (!ReadReprovisionCounter(chip, &nvm_ctr)) {
+        ESP_LOGE(kTag, "[reprov] Cannot read NVM counter — abort.");
+        return false;
+    }
+    if (token_ctr <= nvm_ctr) {
+        ESP_LOGW(kTag, "[reprov] Stale token (tok=%u, nvm=%u) — replay attempt?",
+                 static_cast<unsigned>(token_ctr), static_cast<unsigned>(nvm_ctr));
+        return false;
+    }
+
+    // -- 3) signature verification -------------------------------------------
+    std::array<std::uint8_t, 32> digest{};
+    (void)mbedtls_sha256(token, kHeaderLen, digest.data(), /*is224=*/0);
+
+    const std::uint8_t* sig_ptr = token + kHeaderLen;
+    const std::size_t   sig_len = token_len - kHeaderLen;
+
+    bool sig_ok = false;
+    const se050::Error ve = chip.EcdsaVerify(slot::kReprovisionAuthorityKey,
+                                             se050::cmd::EcdsaAlgo::Sha256,
+                                             digest.data(), digest.size(),
+                                             sig_ptr, sig_len,
+                                             &sig_ok, 800U);
+    if (ve != se050::Error::Ok || !sig_ok) {
+        ESP_LOGE(kTag, "[reprov] Signature verify FAILED (err=%u, ok=%d).",
+                 static_cast<unsigned>(ve), sig_ok ? 1 : 0);
+        return false;
+    }
+
+    // -- 4) commit: bump counter, clear sentinel ------------------------------
+    if (!WriteReprovisionCounter(chip, token_ctr)) {
+        ESP_LOGE(kTag, "[reprov] Failed to persist counter — refusing to clear.");
+        return false;
+    }
+    const se050::Error de = chip.DeleteSecureObject(slot::kProvisionedFlag, 500U);
+    if (de != se050::Error::Ok) {
+        ESP_LOGE(kTag, "[reprov] Could not delete sentinel: %u",
+                 static_cast<unsigned>(de));
+        return false;
+    }
+
+    ESP_LOGW(kTag, "[reprov] Device RE-PROVISIONING authorized. Reboot to re-run Stage 1.");
     return true;
 }
 

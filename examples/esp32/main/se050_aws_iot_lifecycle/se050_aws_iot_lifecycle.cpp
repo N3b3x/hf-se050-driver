@@ -63,6 +63,7 @@
 #include "se050_aws_iot_lifecycle/stage_tls_identity.hpp"
 #include "se050_aws_iot_lifecycle/stage_telemetry.hpp"
 #include "se050_aws_iot_lifecycle/stage_ota_verify.hpp"
+#include "se050_aws_iot_lifecycle/stage_control.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -126,7 +127,7 @@ extern "C" void app_main(void)
     ESP_LOGI(kTag, "##################################################################");
     ESP_LOGI(kTag, "# HF-SE050 — AWS IoT FULL LIFECYCLE DEMO                          ");
     ESP_LOGI(kTag, "# Stages: 0 bring-up -> 1 provision -> 2 bootstrap -> 3 tls-id    ");
-    ESP_LOGI(kTag, "#         -> 4 telemetry -> 5 ota-verify                          ");
+    ESP_LOGI(kTag, "#         -> 4 telemetry -> 5 ota-verify -> 6 control             ");
     ESP_LOGI(kTag, "##################################################################");
 
     // -------------------------------------------------------------------------
@@ -170,6 +171,11 @@ extern "C" void app_main(void)
     //  STAGE 5 — OTA manifest verify demo
     // -------------------------------------------------------------------------
     (void)hf_se050_lifecycle::ota::RunStage(chip);
+
+    // -------------------------------------------------------------------------
+    //  STAGE 6 — cloud control channel (Ping / re-provision / OTA / config)
+    // -------------------------------------------------------------------------
+    hf_se050_lifecycle::control::RunStage(chip);
 
     ESP_LOGI(kTag, " ");
     ESP_LOGI(kTag, "##################################################################");

@@ -81,6 +81,21 @@ inline constexpr se050::cmd::ObjectId kOtaVendorPublicKey{0xF0U, 0x00U, 0x00U, 0
 /// = 0x01 means the provisioning stage already completed successfully.
 inline constexpr se050::cmd::ObjectId kProvisionedFlag{0xF0U, 0x00U, 0x00U, 0x10U};
 
+/// **Re-provisioning authority public key** (ECDSA P-256, 65-byte
+/// uncompressed point). Factory installs it once. Only a token signed by
+/// this key will be accepted by `RequestReprovisioning()` to clear the
+/// provisioned sentinel and allow factory re-flow. Distinct from the OTA
+/// vendor key so the two trust domains (firmware / device-lifecycle) can
+/// be rotated independently. RFU — may equal `kOtaVendorPublicKey` if
+/// your org uses one key.
+inline constexpr se050::cmd::ObjectId kReprovisionAuthorityKey{0xF0U, 0x00U, 0x00U, 0x20U};
+
+/// Monotonic counter (4-byte little-endian) bumped each time a re-
+/// provisioning token is accepted. Stored on-chip so the same token can
+/// never be replayed after use. Reads the current value, compares to the
+/// token's embedded counter, only accepts `token.ctr > nvm.ctr`.
+inline constexpr se050::cmd::ObjectId kReprovisionCounter{0xF0U, 0x00U, 0x00U, 0x21U};
+
 }  // namespace slot
 
 // =============================================================================
