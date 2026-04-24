@@ -34,7 +34,15 @@ se050_aws_iot_lifecycle/
 ├── stage_ota_verify.hpp          ← STAGE 5
 ├── stage_control.hpp             ← STAGE 6 (signed cloud commands)
 ├── README.md                     ← this file
-└── SECURITY.md                   ← FDA-grade security architecture doc
+├── SECURITY.md                   ← FDA-grade security architecture doc
+└── tools/                        ← host-side companion scripts
+    ├── README.md                 ←   map of the toolkit
+    ├── sign_reprovision_token.py ←   offline HSM signer for reprov tokens
+    ├── factory_provision.py      ←   end-of-line test-station driver
+    ├── verify_telemetry.py       ←   CLI signature verifier
+    ├── lambda_verify_telemetry.py ←  AWS Lambda cloud verifier
+    ├── generate_sbom.py          ←   CycloneDX SBOM generator
+    └── tests/                    ←   host unit tests (pytest)
 ```
 
 The *entry* `.cpp` simply calls `RunStage()` on each stage in order. All

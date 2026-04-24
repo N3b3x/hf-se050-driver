@@ -228,7 +228,7 @@ are required.
 
 ```
   ┌──────────────────┐   verifies   ┌──────────────────┐   verifies   ┌──────────────────┐
-  │ MCU ROM boot     │ ───────────▶│ 1st-stage boot-  │ ───────────▶│ Application      │
+  │ MCU ROM boot     │ ───────────▶ │ 1st-stage boot-  │ ───────────▶ │ Application      │
   │ (immutable fuse  │              │ loader (BL1)     │              │ firmware         │
   │  digest / key)   │              │ signed by vendor │              │ signed by vendor │
   └──────────────────┘              └──────────────────┘              └──────────────────┘
