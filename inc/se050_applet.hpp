@@ -19,12 +19,14 @@
 namespace se050::applet {
 
 /**
- * @brief Default SE05x IoT / EdgeLock AID used by many NXP reference projects (13 bytes).
+ * @brief NXP Plug & Trust SE05x IoT applet AID (16 bytes).
  *
- * Replace at integration time if your part uses a different RID/PIX layout.
+ * Matches `SE05X_APPLET_AID` / Portenta SE050C2. The older 13-byte
+ * `A0000003960403030300000000` variant is not this part.
  */
-inline constexpr std::uint8_t kDefaultIoTAppletAid[] = {0xA0U, 0x00U, 0x00U, 0x03U, 0x96U, 0x04U, 0x03U,
-                                                        0x03U, 0x03U, 0x00U, 0x00U, 0x00U, 0x00U};
+inline constexpr std::uint8_t kDefaultIoTAppletAid[] = {
+    0xA0U, 0x00U, 0x00U, 0x03U, 0x96U, 0x54U, 0x53U, 0x00U,
+    0x00U, 0x00U, 0x01U, 0x03U, 0x00U, 0x00U, 0x00U, 0x00U};
 
 /** @brief `sizeof(kDefaultIoTAppletAid)` as a `std::uint8_t` (fits short `Lc`). */
 inline constexpr std::uint8_t kDefaultIoTAppletAidLen =

@@ -2,13 +2,11 @@
  * @file se050_crc.hpp
  * @brief ISO/IEC 7816-3 T=1 **EDC** (16-bit CRC) for NXP SE050 T1oI2C blocks.
  *
- * @details The polynomial and bit ordering match the reference implementation used
- *          with NXP EdgeLock ESE stacks (CRC-16 “ANSI” / IBM-SDLC style, reflected
- *          input, reflected output with final XOR 0xFFFF). On the wire the EDC is
- *          **big-endian**: `frame[len-2] = (crc >> 8)`, `frame[len-1] = (crc & 0xFF)`.
- *
- * @note This is a clean-room implementation intended for interoperability with SE050
- *       framing; verify against a logic analyser or golden captures on first silicon.
+ * @details The polynomial and bit ordering match the NXP EdgeLock T=1oI2C stack
+ *          (CRC-16 “ANSI” / IBM-SDLC style, reflected input, reflected output
+ *          with final XOR 0xFFFF). UM11225 and Portenta SE050C2 silicon put EDC
+ *          **LSB first**: `frame[len] = crc & 0xFF`, `frame[len+1] = crc >> 8`.
+ *          MSB-first is answered with R-block PCB `0x81` (EDC error).
  *
  * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
  */
@@ -24,7 +22,7 @@ namespace se050::crc {
  * @param buffer   Full frame buffer (NAD..INF).
  * @param offset   First byte included in CRC (normally 0 for whole frame sans EDC).
  * @param length   Number of bytes to feed into CRC **excluding** the 2-byte EDC field.
- * @return 16-bit CRC value; @ref AppendEdc maps it to the wire as MSB then LSB.
+ * @return 16-bit CRC value; @ref AppendEdc maps it to the wire as LSB then MSB.
  */
 [[nodiscard]] inline std::uint16_t Crc16Edc7816(const std::uint8_t* buffer, std::size_t offset,
                                                 std::size_t length) noexcept {
@@ -46,8 +44,8 @@ namespace se050::crc {
 /** @brief Append EDC immediately after `frame[0 .. len_without_edc-1]`. */
 inline void AppendEdc(std::uint8_t* frame, std::size_t len_without_edc) noexcept {
     const std::uint16_t c = Crc16Edc7816(frame, 0, len_without_edc);
-    frame[len_without_edc] = static_cast<std::uint8_t>((c >> 8) & 0xFFU);
-    frame[len_without_edc + 1U] = static_cast<std::uint8_t>(c & 0xFFU);
+    frame[len_without_edc] = static_cast<std::uint8_t>(c & 0xFFU);
+    frame[len_without_edc + 1U] = static_cast<std::uint8_t>((c >> 8) & 0xFFU);
 }
 
 /** @brief Verify EDC on a full received frame (includes trailing 2-byte CRC). */
@@ -56,8 +54,8 @@ inline void AppendEdc(std::uint8_t* frame, std::size_t len_without_edc) noexcept
         return false;
     }
     const std::uint16_t recv =
-        static_cast<std::uint16_t>(static_cast<std::uint16_t>(frame[total_len - 2U]) << 8 |
-                                    frame[total_len - 1U]);
+        static_cast<std::uint16_t>(static_cast<std::uint16_t>(frame[total_len - 1U]) << 8 |
+                                    frame[total_len - 2U]);
     const std::uint16_t calc = Crc16Edc7816(frame, 0, total_len - 2U);
     return recv == calc;
 }

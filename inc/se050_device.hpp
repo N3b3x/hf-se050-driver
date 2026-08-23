@@ -8,6 +8,7 @@
 
 #include "se050_applet.hpp"
 #include "se050_commands.hpp"
+#include "se050_rfc3394.hpp"
 #include "se050_session.hpp"
 #include "se050_t1_session.hpp"
 #include "se050_types.hpp"
@@ -299,6 +300,90 @@ public:
             return e;
         }
         return cmd::ParseVerifyResult(rapdu, rapdu_len, verified);
+    }
+
+    /**
+     * @brief Write a persistent AESKey (AN12413 WriteSymmKey, P1_AES).
+     * @details Image KEK must be an AES object, not a BinaryFile, or
+     *          CipherOneShot / RFC3394 unwrap returns 0x6985.
+     */
+    [[nodiscard]] Error WriteAesKey(const cmd::ObjectId& object_id, const std::uint8_t* key, std::size_t key_len,
+                                    std::uint32_t timeout_ms) noexcept {
+        std::uint8_t capdu[80]{};
+        std::size_t capdu_len = 0;
+        Error e = cmd::BuildWriteAesKey(object_id, key, key_len, capdu, sizeof(capdu), &capdu_len);
+        if (e != Error::Ok) {
+            return e;
+        }
+        std::uint8_t rapdu[32]{};
+        std::size_t rapdu_len = 0;
+        e = TransmitApdu(capdu, capdu_len, rapdu, sizeof(rapdu), &rapdu_len, timeout_ms);
+        if (e != Error::Ok) {
+            return e;
+        }
+        const std::uint8_t* payload = nullptr;
+        std::size_t payload_len = 0;
+        apdu::StatusWords sw{};
+        e = apdu::ParseResponse(rapdu, rapdu_len, &payload, &payload_len, &sw);
+        if (e != Error::Ok) {
+            return e;
+        }
+        return apdu::IsSuccess(sw) ? Error::Ok : Error::Protocol;
+    }
+
+    /**
+     * @brief One-shot AES-ECB (AN12413 CipherOneShot, AES_ECB_NOPAD).
+     * @details Input must be a multiple of 16 bytes. Used as the RFC 3394
+     *          block oracle so the KEK never leaves the SE.
+     */
+    [[nodiscard]] Error CipherAesEcb(const cmd::ObjectId& key_id, bool decrypt, const std::uint8_t* in,
+                                     std::size_t in_len, std::uint8_t* out, std::size_t out_cap, std::size_t* out_len,
+                                     std::uint32_t timeout_ms) noexcept {
+        if (out_len == nullptr) {
+            return Error::InvalidArgument;
+        }
+        *out_len = 0;
+        if (in == nullptr || out == nullptr || in_len == 0U || (in_len % 16U) != 0U) {
+            return Error::InvalidArgument;
+        }
+        std::uint8_t capdu[80]{};
+        std::size_t capdu_len = 0;
+        Error e = cmd::BuildCipherOneShot(key_id, decrypt, in, in_len, capdu, sizeof(capdu), &capdu_len);
+        if (e != Error::Ok) {
+            return e;
+        }
+        std::uint8_t rapdu[48]{};
+        std::size_t rapdu_len = 0;
+        e = TransmitApdu(capdu, capdu_len, rapdu, sizeof(rapdu), &rapdu_len, timeout_ms);
+        if (e != Error::Ok) {
+            return e;
+        }
+        return cmd::ParseDataTag1(rapdu, rapdu_len, out, out_cap, out_len);
+    }
+
+    /**
+     * @brief RFC 3394 unwrap of an AES-256 CEK using @p kek_id as the wrapping key.
+     * @details 24 AES-ECB decrypt APDUs. Caller must HoldBus for the whole call.
+     */
+    [[nodiscard]] Error UnwrapAes256Rfc3394(const cmd::ObjectId& kek_id, const std::uint8_t* wrapped,
+                                            std::size_t wrapped_len, std::uint8_t* out, std::size_t out_cap,
+                                            std::size_t* out_len, std::uint32_t timeout_ms) noexcept {
+        struct Ctx {
+            Device* self;
+            cmd::ObjectId id;
+            std::uint32_t timeout_ms;
+        };
+        Ctx ctx{this, kek_id, timeout_ms};
+        auto decrypt = [](const std::uint8_t in[16], std::uint8_t outb[16], void* v) -> Error {
+            auto* c = static_cast<Ctx*>(v);
+            std::size_t n = 0;
+            const Error e = c->self->CipherAesEcb(c->id, true, in, 16U, outb, 16U, &n, c->timeout_ms);
+            if (e != Error::Ok) {
+                return e;
+            }
+            return (n == 16U) ? Error::Ok : Error::Protocol;
+        };
+        return rfc3394::Unwrap(wrapped, wrapped_len, out, out_cap, out_len, decrypt, &ctx);
     }
 
     Session<TransportT>& SessionRef() noexcept { return session_; }

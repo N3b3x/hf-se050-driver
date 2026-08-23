@@ -20,6 +20,12 @@ struct StatusWords {
     std::uint8_t sw2{0};
 };
 
+[[nodiscard]] inline Error BuildCaseShort(std::uint8_t cla, std::uint8_t ins, std::uint8_t p1,
+                                          std::uint8_t p2, const std::uint8_t* data,
+                                          std::uint8_t data_len, bool le_present, std::uint8_t le,
+                                          std::uint8_t* out, std::size_t out_cap,
+                                          std::size_t* out_len) noexcept;
+
 /**
  * @brief Build a **CASE 4** command APDU with **extended** length encoding.
  *
@@ -43,6 +49,25 @@ struct StatusWords {
         return Error::InvalidArgument;
     }
     *out_len = 0;
+    /* SE050C2 on this desk answers short APDUs (SELECT 0x9000) and rejects
+     * Bertin-style extended Lc/Le for the same INS (GetVersion). Prefer
+     * short CASE 2/4 whenever the payload fits in one Lc byte. */
+    if (data_len <= 255U) {
+        if (data_len == 0U) {
+            if (out_cap < 5U) {
+                return Error::BufferTooSmall;
+            }
+            out[0] = cla;
+            out[1] = ins;
+            out[2] = p1;
+            out[3] = p2;
+            out[4] = 0x00U; /* CASE 2 Le */
+            *out_len = 5U;
+            return Error::Ok;
+        }
+        return BuildCaseShort(cla, ins, p1, p2, data, static_cast<std::uint8_t>(data_len), true, 0x00U,
+                              out, out_cap, out_len);
+    }
     constexpr std::size_t kHeader = 7U; /* CLA.. + 00 LcHi LcLo */
     constexpr std::size_t kLeExt = 3U;    /* 00 LeHi LeLo */
     if (data_len > (kMaxApduCommandBytes - kHeader - kLeExt)) {

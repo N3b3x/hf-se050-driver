@@ -25,8 +25,10 @@ inline constexpr std::uint8_t kInsCrypto = 0x03U;
 inline constexpr std::uint8_t kInsMgmt = 0x04U;
 
 inline constexpr std::uint8_t kP1Default = 0x00U;
+inline constexpr std::uint8_t kP1Aes = 0x03U;
 inline constexpr std::uint8_t kP1Binary = 0x06U;
 inline constexpr std::uint8_t kP1Signature = 0x0CU;
+inline constexpr std::uint8_t kP1Cipher = 0x0EU;
 inline constexpr std::uint8_t kP1Ec = 0x01U;
 inline constexpr std::uint8_t kP1KeyPair = 0x60U;
 
@@ -38,6 +40,10 @@ inline constexpr std::uint8_t kP2Random = 0x49U;
 inline constexpr std::uint8_t kP2Exist = 0x27U;
 inline constexpr std::uint8_t kP2Sign = 0x09U;
 inline constexpr std::uint8_t kP2Verify = 0x0AU;
+inline constexpr std::uint8_t kP2EncryptOneshot = 0x37U;
+inline constexpr std::uint8_t kP2DecryptOneshot = 0x38U;
+
+inline constexpr std::uint8_t kCipherAesEcbNopad = 0x0EU;
 
 inline constexpr std::uint8_t kTag1 = 0x41U;
 inline constexpr std::uint8_t kTag2 = 0x42U;
@@ -196,6 +202,49 @@ struct VersionInfo {
     }
     return apdu::BuildCase4Extended(kClaNoSm, kInsWrite, kP1Binary, kP2Default, payload, payload_len, out, out_cap,
                                     out_len);
+}
+
+[[nodiscard]] inline Error BuildWriteAesKey(const ObjectId& object_id, const std::uint8_t* key, std::size_t key_len,
+                                            std::uint8_t* out, std::size_t out_cap, std::size_t* out_len) noexcept {
+    if (out_len == nullptr || key == nullptr || (key_len != 16U && key_len != 24U && key_len != 32U)) {
+        return Error::InvalidArgument;
+    }
+    std::uint8_t payload[48]{};
+    std::size_t payload_len = 0;
+    Error t = tlv::Append(kTag1, object_id.data(), object_id.size(), payload, sizeof(payload), &payload_len);
+    if (t != Error::Ok) {
+        return t;
+    }
+    t = tlv::Append(kTag3, key, key_len, payload, sizeof(payload), &payload_len);
+    if (t != Error::Ok) {
+        return t;
+    }
+    return apdu::BuildCase4Extended(kClaNoSm, kInsWrite, kP1Aes, kP2Default, payload, payload_len, out, out_cap,
+                                    out_len);
+}
+
+[[nodiscard]] inline Error BuildCipherOneShot(const ObjectId& key_id, bool decrypt, const std::uint8_t* data,
+                                              std::size_t data_len, std::uint8_t* out, std::size_t out_cap,
+                                              std::size_t* out_len) noexcept {
+    if (out_len == nullptr || (data_len > 0U && data == nullptr)) {
+        return Error::InvalidArgument;
+    }
+    std::uint8_t payload[64]{};
+    std::size_t payload_len = 0;
+    Error t = tlv::Append(kTag1, key_id.data(), key_id.size(), payload, sizeof(payload), &payload_len);
+    if (t != Error::Ok) {
+        return t;
+    }
+    t = tlv::AppendU8(kTag2, kCipherAesEcbNopad, payload, sizeof(payload), &payload_len);
+    if (t != Error::Ok) {
+        return t;
+    }
+    t = tlv::Append(kTag3, data, data_len, payload, sizeof(payload), &payload_len);
+    if (t != Error::Ok) {
+        return t;
+    }
+    const std::uint8_t p2 = decrypt ? kP2DecryptOneshot : kP2EncryptOneshot;
+    return apdu::BuildCase4Extended(kClaNoSm, kInsCrypto, kP1Cipher, p2, payload, payload_len, out, out_cap, out_len);
 }
 
 [[nodiscard]] inline Error BuildReadObject(const ObjectId& object_id, bool has_offset, std::uint16_t offset,
