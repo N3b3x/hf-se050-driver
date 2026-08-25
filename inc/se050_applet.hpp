@@ -33,6 +33,16 @@ inline constexpr std::uint8_t kDefaultIoTAppletAidLen =
     static_cast<std::uint8_t>(sizeof(kDefaultIoTAppletAid) / sizeof(kDefaultIoTAppletAid[0]));
 
 /**
+ * @brief GlobalPlatform Card Manager / ISD AID (8 bytes).
+ * @details Used for platform SCP03 `PUT KEY` of ISD key version `0x0B`.
+ *          Not an IoT-applet object id.
+ */
+inline constexpr std::uint8_t kCardManagerAid[] = {
+    0xA0U, 0x00U, 0x00U, 0x01U, 0x51U, 0x00U, 0x00U, 0x00U};
+inline constexpr std::uint8_t kCardManagerAidLen =
+    static_cast<std::uint8_t>(sizeof(kCardManagerAid) / sizeof(kCardManagerAid[0]));
+
+/**
  * @brief Build `SELECT` (CLA=`0x00`, INS=`0xA4`, P1=`0x04`, P2=`0x00`) for @ref kDefaultIoTAppletAid.
  * @param out Serialized C-APDU.
  * @param cap Capacity of @p out (≥ 5 + @ref kDefaultIoTAppletAidLen + 1 when `Le` present).
@@ -42,6 +52,15 @@ inline constexpr std::uint8_t kDefaultIoTAppletAidLen =
                                                  std::size_t* out_len) noexcept {
     return apdu::BuildCaseShort(0x00U, 0xA4U, 0x04U, 0x00U, kDefaultIoTAppletAid, kDefaultIoTAppletAidLen, true, 0x00U,
                                 out, cap, out_len);
+}
+
+/**
+ * @brief Build `SELECT` for the Card Manager / ISD (`kCardManagerAid`).
+ */
+[[nodiscard]] inline Error BuildSelectCardManager(std::uint8_t* out, std::size_t cap,
+                                                  std::size_t* out_len) noexcept {
+    return apdu::BuildCaseShort(0x00U, 0xA4U, 0x04U, 0x00U, kCardManagerAid, kCardManagerAidLen, true, 0x00U, out, cap,
+                                out_len);
 }
 
 /**

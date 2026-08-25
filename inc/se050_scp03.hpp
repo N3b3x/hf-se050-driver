@@ -217,6 +217,91 @@ struct ChannelState {
     return Error::Ok;
 }
 
+inline constexpr std::uint8_t kInsPutKey = 0xD8U;
+inline constexpr std::uint8_t kPutKeyTypeAes = 0x88U;
+inline constexpr std::uint8_t kPutKeyP2Multiple = 0x81U;
+inline constexpr std::uint8_t kPutKeyKcvLen = 0x03U;
+inline constexpr std::size_t kPutKeyBlockBytes = 23U;  ///< type + lens + enc key + KCV
+inline constexpr std::size_t kPutKeyDataBytes = 1U + 3U * kPutKeyBlockBytes;  ///< version + ENC/MAC/DEK
+inline constexpr std::size_t kPutKeyExpectRspBytes = 1U + 3U * kPutKeyKcvLen;  ///< version + 3 KCVs
+
+/**
+ * @brief One AES key field inside GP `PUT KEY` (encrypted with the **current** DEK).
+ * @details Layout matches NXP `ex_se05x_rotate_scp03_keys`: type `0x88`,
+ *          KCV = first 3 bytes of AES-ECB(plain, 0x01×16).
+ */
+inline bool FillPutKeyBlock(std::uint8_t* block, const std::uint8_t current_dek[crypto::kAes128KeyLen],
+                            const std::uint8_t plain[crypto::kAes128KeyLen],
+                            std::uint8_t kcv3[kPutKeyKcvLen]) noexcept {
+    if (block == nullptr || current_dek == nullptr || plain == nullptr || kcv3 == nullptr) {
+        return false;
+    }
+    block[0] = kPutKeyTypeAes;
+    block[1] = static_cast<std::uint8_t>(crypto::kAes128KeyLen + 1U);
+    block[2] = static_cast<std::uint8_t>(crypto::kAes128KeyLen);
+    crypto::Aes128EncryptBlock(current_dek, plain, block + 3U);
+    std::uint8_t ones[crypto::kAes128KeyLen];
+    std::memset(ones, 0x01, sizeof(ones));
+    std::uint8_t kcv_full[crypto::kAes128KeyLen]{};
+    crypto::Aes128EncryptBlock(plain, ones, kcv_full);
+    block[3U + crypto::kAes128KeyLen] = kPutKeyKcvLen;
+    std::memcpy(block + 3U + crypto::kAes128KeyLen + 1U, kcv_full, kPutKeyKcvLen);
+    std::memcpy(kcv3, kcv_full, kPutKeyKcvLen);
+    return true;
+}
+
+/**
+ * @brief Build GP `PUT KEY` (CLA `0x80`, INS `0xD8`, P1 = key version, P2 `0x81`).
+ * @details Replaces ISD key set @p key_version (product: `0x0B`) with @p new_enc,
+ *          @p new_mac, @p new_dek. The **current** DEK encrypts the new key
+ *          values. Caller must have an open SCP03 session with the current set.
+ *          Never embeds NXP default key bytes.
+ * @param expect_rsp Version byte + three 3-byte KCVs the card must echo.
+ */
+[[nodiscard]] inline Error BuildPutKey(std::uint8_t key_version,
+                                       const std::uint8_t current_dek[crypto::kAes128KeyLen],
+                                       const std::uint8_t new_enc[crypto::kAes128KeyLen],
+                                       const std::uint8_t new_mac[crypto::kAes128KeyLen],
+                                       const std::uint8_t new_dek[crypto::kAes128KeyLen],
+                                       std::uint8_t* capdu, std::size_t capdu_cap, std::size_t* capdu_len,
+                                       std::uint8_t* expect_rsp, std::size_t expect_cap,
+                                       std::size_t* expect_len) noexcept {
+    if (capdu_len == nullptr || expect_len == nullptr) {
+        return Error::InvalidArgument;
+    }
+    *capdu_len = 0;
+    *expect_len = 0;
+    if (current_dek == nullptr || new_enc == nullptr || new_mac == nullptr || new_dek == nullptr ||
+        capdu == nullptr || expect_rsp == nullptr) {
+        return Error::InvalidArgument;
+    }
+    if (expect_cap < kPutKeyExpectRspBytes) {
+        return Error::BufferTooSmall;
+    }
+    std::uint8_t data[kPutKeyDataBytes]{};
+    std::size_t off = 0;
+    data[off++] = key_version;
+    expect_rsp[0] = key_version;
+    std::size_t kcv_off = 1;
+    if (!FillPutKeyBlock(data + off, current_dek, new_enc, expect_rsp + kcv_off)) {
+        return Error::InvalidArgument;
+    }
+    off += kPutKeyBlockBytes;
+    kcv_off += kPutKeyKcvLen;
+    if (!FillPutKeyBlock(data + off, current_dek, new_mac, expect_rsp + kcv_off)) {
+        return Error::InvalidArgument;
+    }
+    off += kPutKeyBlockBytes;
+    kcv_off += kPutKeyKcvLen;
+    if (!FillPutKeyBlock(data + off, current_dek, new_dek, expect_rsp + kcv_off)) {
+        return Error::InvalidArgument;
+    }
+    *expect_len = kPutKeyExpectRspBytes;
+    return apdu::BuildCaseShort(kClaGp, kInsPutKey, key_version, kPutKeyP2Multiple, data,
+                                static_cast<std::uint8_t>(kPutKeyDataBytes), false, 0x00U, capdu, capdu_cap,
+                                capdu_len);
+}
+
 /**
  * @brief SCP03 session bound to a T=1 transport.
  * @tparam TransportT CRTP I²C transport type used by @ref T1Session.

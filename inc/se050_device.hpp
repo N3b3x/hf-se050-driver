@@ -107,6 +107,22 @@ public:
         return TransmitApdu(capdu, capdu_len, rapdu_buf, rapdu_cap, rapdu_len, timeout_ms);
     }
 
+    /**
+     * @brief `SELECT` the GlobalPlatform Card Manager (ISD) for `PUT KEY`.
+     * @details Required before rotating platform SCP03 keys. Handshake APDUs
+     *          stay plaintext T=1; once the channel is open this SELECT is wrapped.
+     */
+    [[nodiscard]] Error SelectCardManager(std::uint8_t* rapdu_buf, std::size_t rapdu_cap, std::size_t* rapdu_len,
+                                          std::uint32_t timeout_ms) noexcept {
+        std::uint8_t capdu[5U + sizeof(applet::kCardManagerAid) + 1U]{};
+        std::size_t capdu_len = 0;
+        const Error be = applet::BuildSelectCardManager(capdu, sizeof(capdu), &capdu_len);
+        if (be != Error::Ok) {
+            return be;
+        }
+        return TransmitApdu(capdu, capdu_len, rapdu_buf, rapdu_cap, rapdu_len, timeout_ms);
+    }
+
     [[nodiscard]] Error GetVersion(cmd::VersionInfo* out, std::uint32_t timeout_ms) noexcept {
         if (out == nullptr) {
             return Error::InvalidArgument;
