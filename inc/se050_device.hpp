@@ -9,6 +9,7 @@
 #include "se050_applet.hpp"
 #include "se050_commands.hpp"
 #include "se050_rfc3394.hpp"
+#include "se050_scp03.hpp"
 #include "se050_session.hpp"
 #include "se050_t1_session.hpp"
 #include "se050_types.hpp"
@@ -39,8 +40,23 @@ public:
     [[nodiscard]] T1Session<TransportT>& T1() noexcept { return t1_; }
     [[nodiscard]] const T1Session<TransportT>& T1() const noexcept { return t1_; }
 
+    /** @brief SCP03 session. Handshake uses T=1 directly; wrapped APDUs go through @ref TransmitApdu. */
+    [[nodiscard]] scp03::Session<TransportT>& Scp03() noexcept { return scp03_; }
+    [[nodiscard]] const scp03::Session<TransportT>& Scp03() const noexcept { return scp03_; }
+
+    /**
+     * @brief Bind caller-owned wrap workspace (CM4: D2 `.se_apdu_scratch`, not a task stack).
+     * @details Required before @ref TransmitApdu will wrap. Handshake APDUs stay plaintext.
+     */
+    void BindScp03WrapScratch(std::uint8_t* buf, std::size_t cap) noexcept {
+        scp03_wrap_ = buf;
+        scp03_wrap_cap_ = cap;
+    }
+
     /**
      * @brief Transmit a **C-APDU** (already serialized) and receive the **R-APDU** INF bytes.
+     * @details When @ref Scp03 is open, C-MAC/C-ENC wrap and R-MAC/R-ENC unwrap using the
+     *          bound scratch. Otherwise plaintext T=1 (honest posture without unique keys).
      * @param capdu Serialized command APDU.
      * @param capdu_len Length of @p capdu.
      * @param rapdu_buf Buffer for concatenated response body + `SW1SW2`.
@@ -53,7 +69,25 @@ public:
         if (!EnsureInitialized()) {
             return Error::NotInitialized;
         }
-        return t1_.ExchangeInformation(capdu, capdu_len, rapdu_buf, rapdu_cap, rapdu_len, timeout_ms);
+        if (!scp03_.IsOpen()) {
+            return t1_.ExchangeInformation(capdu, capdu_len, rapdu_buf, rapdu_cap, rapdu_len, timeout_ms);
+        }
+        if (scp03_wrap_ == nullptr || scp03_wrap_cap_ < scp03::kWrapScratchBytes) {
+            return Error::BufferTooSmall;
+        }
+        std::size_t wrapped_len = 0;
+        Error e = scp03_.WrapCommand(capdu, capdu_len, scp03_wrap_, scp03_wrap_cap_, &wrapped_len);
+        if (e != Error::Ok) {
+            return e;
+        }
+        e = t1_.ExchangeInformation(scp03_wrap_, wrapped_len, rapdu_buf, rapdu_cap, rapdu_len, timeout_ms);
+        if (e != Error::Ok) {
+            return e;
+        }
+        if (rapdu_len == nullptr) {
+            return Error::InvalidArgument;
+        }
+        return scp03_.UnwrapResponse(rapdu_buf, *rapdu_len, rapdu_buf, rapdu_cap, rapdu_len);
     }
 
     /**
@@ -392,6 +426,9 @@ public:
 private:
     Session<TransportT> session_;
     T1Session<TransportT> t1_;
+    scp03::Session<TransportT> scp03_{};
+    std::uint8_t* scp03_wrap_{nullptr};
+    std::size_t scp03_wrap_cap_{0};
 };
 
 }  // namespace se050
