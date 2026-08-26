@@ -229,6 +229,9 @@ inline constexpr std::size_t kPutKeyExpectRspBytes = 1U + 3U * kPutKeyKcvLen;  /
  * @brief One AES key field inside GP `PUT KEY` (encrypted with the **current** DEK).
  * @details Layout matches NXP `ex_se05x_rotate_scp03_keys`: type `0x88`,
  *          KCV = first 3 bytes of AES-ECB(plain, 0x01×16).
+ *          This is GPCS B.2.1 AES-ECB of a 16-byte key with the current DEK
+ *          (NXP `ex_se05x_rotate_scp03_keys`). It is **not** RFC 3394 AES Key
+ *          Wrap (that wrap is ADR-0054 sec_rpc / image KEK). Do not substitute.
  */
 inline bool FillPutKeyBlock(std::uint8_t* block, const std::uint8_t current_dek[crypto::kAes128KeyLen],
                             const std::uint8_t plain[crypto::kAes128KeyLen],
