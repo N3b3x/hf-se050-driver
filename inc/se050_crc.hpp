@@ -4,7 +4,7 @@
  *
  * @details The polynomial and bit ordering match the NXP EdgeLock T=1oI2C stack
  *          (CRC-16 “ANSI” / IBM-SDLC style, reflected input, reflected output
- *          with final XOR 0xFFFF). UM11225 and Portenta SE050C2 silicon put EDC
+ *          with final XOR 0xFFFF). UM11225 and SE050C2 silicon put EDC
  *          **LSB first**: `frame[len] = crc & 0xFF`, `frame[len+1] = crc >> 8`.
  *          MSB-first is answered with R-block PCB `0x81` (EDC error).
  *

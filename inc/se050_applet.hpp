@@ -21,7 +21,7 @@ namespace se050::applet {
 /**
  * @brief NXP Plug & Trust SE05x IoT applet AID (16 bytes).
  *
- * Matches `SE05X_APPLET_AID` / Portenta SE050C2. The older 13-byte
+ * Matches `SE05X_APPLET_AID` / SE050C2 silicon. The older 13-byte
  * `A0000003960403030300000000` variant is not this part.
  */
 inline constexpr std::uint8_t kDefaultIoTAppletAid[] = {
