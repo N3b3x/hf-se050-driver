@@ -147,7 +147,11 @@ struct VersionInfo {
     if (t != Error::Ok) {
         return t;
     }
-    return apdu::BuildCase4Extended(kClaNoSm, kInsRead, kP1Default, kP2Exist, payload, payload_len, out, out_cap,
+    /* CheckObjectExists is a management command: INS_MGMT 0x04 / P2_EXIST
+     * (AN12413; NXP Se05x_API_CheckObjectExists). With INS_READ the applet
+     * answers 0x6985 for every object, so "absent" could never be told from a
+     * fault (desk SE050C2, 2026-10-15). */
+    return apdu::BuildCase4Extended(kClaNoSm, kInsMgmt, kP1Default, kP2Exist, payload, payload_len, out, out_cap,
                                     out_len);
 }
 
