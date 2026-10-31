@@ -15,7 +15,7 @@ permalink: /docs/installation/
 Clone with submodules:
 
 ```bash
-git clone --recursive https://github.com/N3b3x/hf-se050-driver.git
+git clone --recursive https://github.com/hardfoc/hf-se050-driver.git
 ```
 
 Non-redistributable reference files belong in `_local_reference/` (gitignored); see that directory’s `README.md`.
