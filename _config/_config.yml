@@ -212,7 +212,7 @@ seo:
   name: "HardFOC SE050 Driver"
   description: >
     NXP SE050 / SE050A secure element driver (scaffold). ESP32-S3 examples; implementation TBD.
-  url: "https://n3b3x.github.io/hf-se050-driver"
+  url: "https://hardfoc.github.io/hf-se050-driver"
   twitter:
     card: "summary_large_image"
     site: "@n3b3x"

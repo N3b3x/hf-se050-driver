@@ -10,7 +10,7 @@ has_children: true
 
 # HF-SE050 documentation
 
-This site tracks the [`docs/`](https://github.com/N3b3x/hf-se050-driver/tree/main/docs) folder for the **NXP SE050 / SE050A** secure element driver. It focuses on practical bring-up, object management, onboarding flows, and production security patterns.
+This site tracks the [`docs/`](https://github.com/hardfoc/hf-se050-driver/tree/main/docs) folder for the **NXP SE050 / SE050A** secure element driver. It focuses on practical bring-up, object management, onboarding flows, and production security patterns.
 
 ## Structure
 

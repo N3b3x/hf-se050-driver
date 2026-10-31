@@ -7,9 +7,9 @@ maintainers:
   - "HardFOC"
 license: "GPL-3.0"
 
-url: https://github.com/N3b3x/hf-se050-driver
-repository: https://github.com/N3b3x/hf-se050-driver
-issues: https://github.com/N3b3x/hf-se050-driver/issues
+url: https://github.com/hardfoc/hf-se050-driver
+repository: https://github.com/hardfoc/hf-se050-driver
+issues: https://github.com/hardfoc/hf-se050-driver/issues
 
 targets:
   - esp32s3

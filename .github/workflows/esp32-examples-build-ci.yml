@@ -62,7 +62,7 @@ jobs:
   # 🏗️ Build firmware (parallel matrix)
   build:
     needs: validate
-    uses: N3b3x/hf-espidf-ci-tools/.github/workflows/ru-build.yml@main
+    uses: hardfoc/hf-espidf-ci-tools/.github/workflows/ru-build.yml@main
     with:
       project_dir: ${{ needs.validate.outputs.project_dir }}
       project_tools_dir: ${{ needs.validate.outputs.tools_dir }}
@@ -70,7 +70,7 @@ jobs:
 
   # 🔧 Lint and format code in ESP32 folder only
   lint:
-    uses: N3b3x/hf-general-ci-tools/.github/workflows/ru-cpp-lint.yml@main
+    uses: hardfoc/hf-general-ci-tools/.github/workflows/ru-cpp-lint.yml@main
     with:
       clang_version: "20"
       clang_format_config: "_config/.clang-format"
